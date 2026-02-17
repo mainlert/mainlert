@@ -84,6 +84,7 @@ class AccelerometerService : Service(), SensorEventListener {
     private var movementBuffer = mutableListOf<Float>()
     private var bufferMaxSize = 100
     private var currentServiceId: String? = null
+    private var currentVehicleId: String? = null
     private var currentServiceMileageLimit: Float = 1000f // Default mileage limit
 
     // Service reading calculation - using gravity-compensated movement
@@ -142,7 +143,8 @@ class AccelerometerService : Service(), SensorEventListener {
         when (intent?.action) {
             ACTION_START_MONITORING -> {
                 currentServiceId = intent.getStringExtra(EXTRA_SERVICE_ID)
-                android.util.Log.i("AccelerometerService", "START_MONITORING received, serviceId: $currentServiceId")
+                currentVehicleId = intent.getStringExtra(EXTRA_VEHICLE_ID)
+                android.util.Log.i("AccelerometerService", "START_MONITORING received, serviceId: $currentServiceId, vehicleId: $currentVehicleId")
                 // Fetch service details to get mileage limit (only once at startup)
                 serviceScope.launch {
                     currentServiceId?.let { serviceId ->
@@ -430,9 +432,10 @@ class AccelerometerService : Service(), SensorEventListener {
             putExtra(EXTRA_TOTAL_MOVEMENT, totalMovement)
             putExtra(EXTRA_IS_VEHICLE_MOVEMENT, isVehicleMovement)
             putExtra(EXTRA_IS_MONITORING, isMonitoring)
+            putExtra(EXTRA_VEHICLE_ID, currentVehicleId)
         }
         val sent = LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-        android.util.Log.d("AccelerometerService", "Broadcast sent: $sent, totalMovement=$totalMovement, magnitude=$magnitude")
+        android.util.Log.d("AccelerometerService", "Broadcast sent: $sent, totalMovement=$totalMovement, magnitude=$magnitude, vehicleId=$currentVehicleId")
     }
 
     /**
@@ -477,6 +480,7 @@ class AccelerometerService : Service(), SensorEventListener {
         const val ACTION_STOP_MONITORING = "com.mainlert.mainlertapp.STOP_MONITORING"
         const val ACTION_BROADCAST_ACCELEROMETER = "com.mainlert.mainlertapp.BROADCAST_ACCELEROMETER"
         const val EXTRA_SERVICE_ID = "service_id"
+        const val EXTRA_VEHICLE_ID = "vehicle_id"
         const val EXTRA_X = "extra_x"
         const val EXTRA_Y = "extra_y"
         const val EXTRA_Z = "extra_z"
@@ -488,11 +492,13 @@ class AccelerometerService : Service(), SensorEventListener {
         fun startService(
             context: Context,
             serviceId: String,
+            vehicleId: String,
         ) {
             val intent =
                 Intent(context, AccelerometerService::class.java).apply {
                     action = ACTION_START_MONITORING
                     putExtra(EXTRA_SERVICE_ID, serviceId)
+                    putExtra(EXTRA_VEHICLE_ID, vehicleId)
                 }
             // Use startForegroundService for Android O+ (required for foreground services)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

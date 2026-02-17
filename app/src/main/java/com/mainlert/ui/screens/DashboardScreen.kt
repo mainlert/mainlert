@@ -231,7 +231,9 @@ fun dashboardScreen(
                                 VehicleCard(
                                     vehicle = vehicle,
                                     isSelected = selectedVehicle?.id == vehicle.id,
-                                    onClick = { dashboardViewModel.selectVehicle(vehicle) }
+                                    onClick = { dashboardViewModel.selectVehicle(vehicle) },
+                                    isEnabled = !isMonitoring,
+                                    isMonitoringActive = isMonitoring
                                 )
                             }
                         }
@@ -274,7 +276,9 @@ fun dashboardScreen(
                                     ServiceRowCard(
                                         service = service,
                                         currentReadings = serviceReadings,
-                                        onClick = { dashboardViewModel.startMonitoringForService(service.id) }
+                                        onClick = { dashboardViewModel.startMonitoringForService(service.id) },
+                                        isEnabled = !isMonitoring,
+                                        isMonitoringActive = isMonitoring
                                     )
                                 }
                             }
@@ -720,17 +724,27 @@ fun VehicleCard(
     vehicle: Vehicle,
     isSelected: Boolean,
     onClick: () -> Unit,
+    isEnabled: Boolean = true,
+    isMonitoringActive: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val isClickable = isEnabled && !isMonitoringActive
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .then(
+                if (isClickable) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
+            containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                else -> MaterialTheme.colorScheme.surfaceVariant
             }
         ),
         shape = RoundedCornerShape(12.dp),
@@ -746,10 +760,10 @@ fun VehicleCard(
                 Icon(
                     Icons.Default.Home,
                     contentDescription = null,
-                    tint = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = when {
+                        isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                        !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
                     },
                     modifier = Modifier.size(32.dp),
                 )
@@ -758,32 +772,44 @@ fun VehicleCard(
                         text = vehicle.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
+                        color = when {
+                            isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                            !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            else -> MaterialTheme.colorScheme.onSurface
                         },
                     )
                     Text(
                         text = vehicle.plateNumber,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when {
+                            isSelected -> MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                     )
                 }
             }
-            Text(
-                text = vehicle.status.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = when (vehicle.status) {
-                    Vehicle.VehicleStatus.ACTIVE -> MaterialTheme.colorScheme.primary
-                    Vehicle.VehicleStatus.INACTIVE -> MaterialTheme.colorScheme.secondary
-                    Vehicle.VehicleStatus.SOLD -> MaterialTheme.colorScheme.error
-                },
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSelected && isMonitoringActive) {
+                    Text(
+                        text = "MONITORING",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+                Text(
+                    text = vehicle.status.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = when {
+                        !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        vehicle.status == Vehicle.VehicleStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+                        vehicle.status == Vehicle.VehicleStatus.INACTIVE -> MaterialTheme.colorScheme.secondary
+                        vehicle.status == Vehicle.VehicleStatus.SOLD -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+            }
         }
     }
 }
@@ -793,8 +819,12 @@ fun ServiceRowCard(
     service: Service,
     currentReadings: Int,
     onClick: () -> Unit,
+    isEnabled: Boolean = true,
+    isMonitoringActive: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val isClickable = isEnabled && !isMonitoringActive
+    
     // Persist readings per service - survives process death
     // Only resets when admin/employee resets this specific service
     var accumulatedReadings by rememberSaveable(service.id) { mutableStateOf(0) }
@@ -809,9 +839,18 @@ fun ServiceRowCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .then(
+                if (isClickable) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = when {
+                isMonitoringActive -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
         ),
         shape = RoundedCornerShape(12.dp),
     ) {
@@ -823,24 +862,45 @@ fun ServiceRowCard(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = service.variantName.ifEmpty { service.name },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = service.variantName.ifEmpty { service.name },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (!isEnabled || isMonitoringActive) {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                    )
+                    if (isMonitoringActive) {
+                        Text(
+                            text = " (ACTIVE)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
                 Text(
                     text = service.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (!isEnabled || isMonitoringActive) {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     maxLines = 1,
                 )
                 Text(
                     text = "Status: ${service.status.name}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = when (service.status) {
-                        Service.ServiceStatus.ACTIVE -> MaterialTheme.colorScheme.primary
-                        Service.ServiceStatus.COMPLETED -> MaterialTheme.colorScheme.secondary
-                        Service.ServiceStatus.CANCELLED -> MaterialTheme.colorScheme.error
+                    color = when {
+                        !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        else -> when (service.status) {
+                            Service.ServiceStatus.ACTIVE -> MaterialTheme.colorScheme.primary
+                            Service.ServiceStatus.COMPLETED -> MaterialTheme.colorScheme.secondary
+                            Service.ServiceStatus.CANCELLED -> MaterialTheme.colorScheme.error
+                        }
                     },
                 )
             }
@@ -848,16 +908,20 @@ fun ServiceRowCard(
                 Text(
                     text = "$accumulatedReadings",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (accumulatedReadings >= service.mileageLimit.toInt()) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
+                    color = when {
+                        accumulatedReadings >= service.mileageLimit.toInt() -> MaterialTheme.colorScheme.error
+                        !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        else -> MaterialTheme.colorScheme.primary
                     },
                 )
                 Text(
                     text = "/ ${service.mileageLimit.toInt()}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = if (!isEnabled || isMonitoringActive) {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
         }

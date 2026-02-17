@@ -226,6 +226,12 @@ class DashboardViewModel
      */
     private var currentServiceId: String? = null
 
+    /**
+     * Holds the ID of the currently monitored vehicle.
+     * This is used to enforce vehicle locking - only one vehicle can be monitored at a time.
+     */
+    private var monitoredVehicleId: String? = null
+
     init {
         // Loads all services for the current user on ViewModel initialization.
         loadServices()
@@ -263,6 +269,10 @@ class DashboardViewModel
      * - 1 vehicle: auto-select and start immediately
      * - Multiple vehicles: show selection dialog
      * - 0 vehicles: show error
+     * 
+     * When monitoring is already active, enforces vehicle locking:
+     * - Can only monitor one vehicle at a time
+     * - Must stop current monitoring before starting a different vehicle
      */
     fun startMonitoringService() {
         android.util.Log.i("DashboardViewModel", ">>> START BUTTON CLICKED <<<")
@@ -271,6 +281,14 @@ class DashboardViewModel
         if (_batteryLevel.value < 20) {
             _errorMessage.value = "Battery level too low. Please charge your device before starting monitoring."
             android.util.Log.w("DashboardViewModel", "Battery level too low: ${_batteryLevel.value}")
+            return
+        }
+
+        // Check if monitoring is already active - enforce vehicle locking
+        if (_isMonitoring.value && monitoredVehicleId != null) {
+            val currentVehicle = _vehicles.value.find { it.id == monitoredVehicleId }
+            _errorMessage.value = "Already monitoring ${currentVehicle?.name ?: "a vehicle"}. Please stop monitoring first before switching vehicles."
+            android.util.Log.w("DashboardViewModel", "Vehicle locking: Already monitoring vehicle $monitoredVehicleId")
             return
         }
 
@@ -331,6 +349,9 @@ class DashboardViewModel
                         _isMonitoring.value = false
                         _isServiceActive.value = false
 
+                        // Clear monitored vehicle ID (unlock vehicle)
+                        monitoredVehicleId = null
+
                         // Update service status
                         _serviceStatus.value =
                             _serviceStatus.value?.copy(
@@ -345,6 +366,8 @@ class DashboardViewModel
                     }
                 }
             } else {
+                // Even if no service ID, clear monitored vehicle
+                monitoredVehicleId = null
                 _errorMessage.value = "No active service to stop"
             }
 
@@ -1030,8 +1053,10 @@ class DashboardViewModel
 
     /**
      * Starts monitoring for a specific service on a selected vehicle.
+     * @param serviceId The ID of the service to monitor
+     * @param vehicleId The ID of the vehicle (optional, defaults to empty string)
      */
-    fun startMonitoringForService(serviceId: String) {
+    fun startMonitoringForService(serviceId: String, vehicleId: String = "") {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
@@ -1046,10 +1071,13 @@ class DashboardViewModel
 
             when (startResult) {
                 is Result.Success -> {
-                    AccelerometerService.startService(context, serviceId)
+                    AccelerometerService.startService(context, serviceId, vehicleId)
                     _isMonitoring.value = true
                     _isServiceActive.value = true
                     currentServiceId = serviceId
+                    if (vehicleId.isNotEmpty()) {
+                        monitoredVehicleId = vehicleId
+                    }
                     getServiceStatusSummary(serviceId)
                     observeServiceReadings(serviceId)
                     _successMessage.value = "Monitoring started successfully"
@@ -1269,6 +1297,7 @@ class DashboardViewModel
                     // Select the first service and start monitoring
                     val firstService = services.first()
                     currentServiceId = firstService.id
+                    monitoredVehicleId = vehicle.id // Lock to this vehicle
                     android.util.Log.d("DashboardViewModel", "Using first service: ${firstService.id}, name: ${firstService.name}")
                     
                     // Update selected vehicle
@@ -1282,11 +1311,12 @@ class DashboardViewModel
                         is Result.Success -> {
                             android.util.Log.d("DashboardViewModel", "Firebase monitoring started, calling AccelerometerService.startService")
                             try {
-                                AccelerometerService.startService(context, firstService.id)
+                                AccelerometerService.startService(context, firstService.id, vehicle.id)
                                 android.util.Log.i("DashboardViewModel", "AccelerometerService started successfully")
                             } catch (e: Exception) {
                                 android.util.Log.e("DashboardViewModel", "Error starting AccelerometerService", e)
                                 _errorMessage.value = "Failed to start accelerometer service: ${e.message}"
+                                monitoredVehicleId = null // Clear on error
                                 _isLoading.value = false
                                 return@launch
                             }
