@@ -145,17 +145,24 @@ class AccelerometerService : Service(), SensorEventListener {
                 currentServiceId = intent.getStringExtra(EXTRA_SERVICE_ID)
                 currentVehicleId = intent.getStringExtra(EXTRA_VEHICLE_ID)
                 android.util.Log.i("AccelerometerService", "START_MONITORING received, serviceId: $currentServiceId, vehicleId: $currentVehicleId")
-                // Fetch service details to get mileage limit (only once at startup)
+
+                // Start monitoring IMMEDIATELY - don't wait for Firebase
+                startMonitoring()
+
+                // Load existing service data asynchronously (updates totalMovement while monitoring runs)
                 serviceScope.launch {
                     currentServiceId?.let { serviceId ->
                         val serviceResult = serviceRepository.getServiceById(serviceId)
                         if (serviceResult is com.mainlert.data.models.Result.Success) {
-                            currentServiceMileageLimit = serviceResult.data?.mileageLimit ?: 1000f
-                            android.util.Log.d("AccelerometerService", "Mileage limit set to: $currentServiceMileageLimit")
+                            val service = serviceResult.data
+                            currentServiceMileageLimit = service?.mileageLimit ?: 1000f
+                            // Load existing totalMovement so we continue from where we left off
+                            // This ensures readings don't wait for local to catch up to Firebase value
+                            totalMovement = service?.totalMovement ?: 0f
+                            android.util.Log.d("AccelerometerService", "Mileage limit set to: $currentServiceMileageLimit, totalMovement loaded: $totalMovement")
                         }
                     }
                 }
-                startMonitoring()
             }
             ACTION_STOP_MONITORING -> stopMonitoring()
         }
@@ -251,7 +258,8 @@ class AccelerometerService : Service(), SensorEventListener {
         isMonitoring = true
         isServiceActive = true
         readingStartTime = System.currentTimeMillis()
-        totalMovement = 0f
+        // Don't reset totalMovement to 0 - it will be loaded from Firebase asynchronously
+        // This ensures readings continue from where they left off when accelerometer restarts
         movementBuffer.clear()
         lastBroadcastTime = 0L
 
