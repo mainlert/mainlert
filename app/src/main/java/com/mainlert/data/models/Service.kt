@@ -23,8 +23,8 @@ data class Service(
     var isMonitoring: Boolean = false,
     var lastReadingTime: Long = 0L,
     var userId: String = "",
-    // Default deadlock limit (total movement threshold)
-    var deadlockLimit: Float = 1000f,
+    // Default mileage limit (total movement threshold)
+    var mileageLimit: Float = 1000f,
 ) {
     enum class ServiceStatus {
         ACTIVE,
@@ -53,7 +53,7 @@ data class Service(
             "isMonitoring" to isMonitoring,
             "lastReadingTime" to lastReadingTime,
             "userId" to userId,
-            "deadlockLimit" to deadlockLimit,
+            "mileageLimit" to mileageLimit,
         )
     }
 }

@@ -23,7 +23,7 @@
     <string name="start_monitoring">Iniciar monitoreo</string>
     <string name="stop_monitoring">Detener monitoreo</string>
     <string name="readings">Lecturas</string>
-    <string name="deadlock_threshold">Umbral de bloqueo</string>
+    <string name="mileage_threshold">Umbral de bloqueo</string>
     <string name="current_readings">Lecturas actuales</string>
     <string name="reset_service">Restablecer servicio</string>
     <string name="confirm_reset">¿Está seguro de que desea restablecer este servicio?</string>
@@ -38,8 +38,8 @@
     <string name="notifications_permission_rationale">MainLert necesita acceso a las notificaciones para alertarle cuando las lecturas de servicio alcancen niveles críticos.</string>
     <string name="grant_permissions">Conceder permisos</string>
     <string name="dismiss">Descartar</string>
-    <string name="deadlock_alert_title">Alerta de Bloqueo de Servicio</string>
-    <string name="deadlock_alert_message">Las lecturas de servicio han alcanzado niveles críticos. Se requiere mantenimiento inmediato.</string>
+    <string name="mileage_alert_title">Alerta de Bloqueo de Servicio</string>
+    <string name="mileage_alert_message">Las lecturas de servicio han alcanzado niveles críticos. Se requiere mantenimiento inmediato.</string>
     <string name="movement_detected">Movimiento del vehículo detectado</string>
     <string name="stationary">Vehículo estacionario</string>
     <string name="battery_optimization">Optimización de batería</string>

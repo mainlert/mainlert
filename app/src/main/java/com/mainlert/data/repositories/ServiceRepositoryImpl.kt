@@ -32,7 +32,7 @@ class ServiceRepositoryImpl : ServiceRepository {
 
     override fun observeServiceReadings(serviceId: String): Flow<List<ServiceReading>> = delegate.observeServiceReadings(serviceId)
 
-    override suspend fun checkDeadlockStatus(serviceId: String): Result<Boolean> = delegate.checkDeadlockStatus(serviceId)
+    override suspend fun checkMileageStatus(serviceId: String): Result<Boolean> = delegate.checkMileageStatus(serviceId)
 
     override suspend fun getCurrentActiveService(): Result<Service?> = delegate.getCurrentActiveService()
 

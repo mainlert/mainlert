@@ -24,7 +24,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -292,11 +297,11 @@ fun dashboardScreen(
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column {
                                 Text(currentService.variantName.ifEmpty { currentService.name }, style = MaterialTheme.typography.bodyMedium)
-                                Text("$serviceReadings", style = MaterialTheme.typography.displaySmall, color = if (serviceReadings >= currentService.deadlockLimit.toInt()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                                Text("$serviceReadings", style = MaterialTheme.typography.displaySmall, color = if (serviceReadings >= currentService.mileageLimit.toInt()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                             }
                             Column(horizontalAlignment = Alignment.End) {
-                                Text("Deadlock Limit", style = MaterialTheme.typography.bodyMedium)
-                                Text("${currentService.deadlockLimit.toInt()}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
+                                Text("Mileage Limit", style = MaterialTheme.typography.bodyMedium)
+                                Text("${currentService.mileageLimit.toInt()}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
                             }
                         }
                         Text(
@@ -380,10 +385,12 @@ fun dashboardScreen(
         if (isOverlayVisible) {
             InactivityOverlay(
                 modifier = Modifier.fillMaxSize(),
-                services = services,
+                vehicleServices = vehicleServices,
+                selectedVehicle = selectedVehicle,
                 accelerometerReadings = accelerometerReadings,
                 isMonitoring = isMonitoring,
                 isVideoEnabled = isVideoEnabled,
+                serviceReadings = serviceReadings,
                 onToggleMonitoring = {
                     if (isMonitoring) {
                         dashboardViewModel.stopMonitoringService()
@@ -448,10 +455,12 @@ fun dashboardScreen(
 @Composable
 fun InactivityOverlay(
     modifier: Modifier = Modifier,
-    services: List<Service>,
+    vehicleServices: List<Service>,
+    selectedVehicle: Vehicle?,
     accelerometerReadings: Triple<Float, Float, Float>,
     isMonitoring: Boolean,
     isVideoEnabled: Boolean,
+    serviceReadings: Int = 0,
     onToggleMonitoring: () -> Unit,
     onToggleVideo: () -> Unit,
     onInteraction: () -> Unit,
@@ -501,7 +510,24 @@ fun InactivityOverlay(
                     }
                 }
 
-                Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                // Vehicle info header
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (selectedVehicle != null) {
+                        Text(
+                            text = selectedVehicle.name.uppercase(),
+                            color = Color.Cyan.copy(alpha = 0.8f),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 4.sp
+                        )
+                        Text(
+                            text = selectedVehicle.plateNumber.uppercase(),
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 14.sp,
+                            letterSpacing = 2.sp
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(text = "SERVICES", color = Color.White.copy(alpha = 0.7f), fontSize = 24.sp, fontWeight = FontWeight.Bold, letterSpacing = 8.sp)
                 }
 
@@ -512,7 +538,11 @@ fun InactivityOverlay(
                     )
                 }
 
-                AutoScrollingServicesRow(services = services, modifier = Modifier.fillMaxWidth().padding(top = if (isVideoEnabled) 24.dp else 16.dp))
+                AutoScrollingServicesRow(
+                    services = vehicleServices,
+                    serviceReadings = serviceReadings,
+                    modifier = Modifier.fillMaxWidth().padding(top = if (isVideoEnabled) 24.dp else 16.dp)
+                )
             }
         }
 
@@ -535,13 +565,63 @@ fun InactivityOverlay(
 }
 
 @Composable
-fun AutoScrollingServicesRow(services: List<Service>, modifier: Modifier = Modifier) {
+fun AutoScrollingServicesRow(
+    services: List<Service>,
+    modifier: Modifier = Modifier,
+    serviceReadings: Int = 0
+) {
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Get the actual service count to loop through
+    val displayServices = if (services.isEmpty()) {
+        listOf(Service(name = "No Services", description = "", mileageLimit = 0f, variantName = ""))
+    } else {
+        services
+    }
+    
+    // Calculate the number of items for seamless infinite scrolling
+    // We create multiple copies to simulate infinite scrolling
+    val totalItems = displayServices.size * 10 // 10 complete cycles for smooth looping
+    
+    // Auto-scroll effect for continuous looping animation
+    LaunchedEffect(displayServices) {
+        if (displayServices.isNotEmpty()) {
+            var currentIndex = 0
+            while (true) {
+                // Delay between scrolls (adjust for speed)
+                delay(3000L) // 3 seconds per scroll
+                
+                // Move to next item
+                currentIndex = (currentIndex + 1) % displayServices.size
+                
+                // Scroll to position with animation
+                // We use a multiplier to create the illusion of infinite scrolling
+                val targetIndex = currentIndex + (displayServices.size * 5) // Start from middle
+                
+                coroutineScope.launch {
+                    listState.animateScrollToItem(targetIndex)
+                }
+            }
+        }
+    }
+
     Column(modifier = modifier) {
-        LazyRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            val displayServices = if (services.isEmpty()) listOf(Service(name = "No Services", description = "", deadlockLimit = 0f)) else services
-            val loopedServices = (displayServices + displayServices + displayServices).take(15)
-            items(items = loopedServices) { service ->
-                ServiceCard(service = service, reading = service.totalMovement.toInt().coerceAtLeast(0))
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Create items for seamless infinite scrolling
+            itemsIndexed(
+                items = List(totalItems) { index ->
+                    displayServices[index % displayServices.size]
+                }
+            ) { _, service ->
+                ServiceCard(
+                    service = service,
+                    reading = if (service.name == "No Services") 0 else serviceReadings
+                )
             }
         }
     }
@@ -549,12 +629,47 @@ fun AutoScrollingServicesRow(services: List<Service>, modifier: Modifier = Modif
 
 @Composable
 fun ServiceCard(service: Service, reading: Int, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.width(140.dp).height(100.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)), shape = RoundedCornerShape(12.dp)) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text(text = service.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, maxLines = 1)
+    Card(
+        modifier = modifier.width(160.dp).height(120.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.1f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Show variant name if available, otherwise service name
+            Text(
+                text = service.variantName.ifEmpty { service.name },
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "$reading", color = if (reading >= service.deadlockLimit.toInt()) Color.Red.copy(alpha = 0.9f) else Color.Cyan.copy(alpha = 0.9f), fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text(text = "value", color = Color.White.copy(alpha = 0.5f), fontSize = 10.sp)
+            // Show reading value with color based on limit
+            Text(
+                text = "$reading",
+                color = if (reading >= service.mileageLimit.toInt() && service.mileageLimit > 0) {
+                    Color.Red.copy(alpha = 0.9f)
+                } else {
+                    Color.Cyan.copy(alpha = 0.9f)
+                },
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold
+            )
+            // Show limit info
+            if (service.mileageLimit > 0) {
+                Text(
+                    text = "/ ${service.mileageLimit.toInt()}",
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 10.sp
+                )
+            }
         }
     }
 }
@@ -733,14 +848,14 @@ fun ServiceRowCard(
                 Text(
                     text = "$accumulatedReadings",
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (accumulatedReadings >= service.deadlockLimit.toInt()) {
+                    color = if (accumulatedReadings >= service.mileageLimit.toInt()) {
                         MaterialTheme.colorScheme.error
                     } else {
                         MaterialTheme.colorScheme.primary
                     },
                 )
                 Text(
-                    text = "/ ${service.deadlockLimit.toInt()}",
+                    text = "/ ${service.mileageLimit.toInt()}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1092,7 +1207,7 @@ private fun ServiceSelectionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "Limit: ${service.deadlockLimit.toInt()}",
+                text = "Limit: ${service.mileageLimit.toInt()}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
             )

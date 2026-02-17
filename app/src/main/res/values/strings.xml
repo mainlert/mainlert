@@ -23,7 +23,7 @@
     <string name="start_monitoring">Start Monitoring</string>
     <string name="stop_monitoring">Stop Monitoring</string>
     <string name="readings">Readings</string>
-    <string name="deadlock_threshold">Deadlock Threshold</string>
+    <string name="mileage_threshold">Mileage Threshold</string>
     <string name="current_readings">Current Readings</string>
     <string name="reset_service">Reset Service</string>
     <string name="confirm_reset">Are you sure you want to reset this service?</string>
@@ -38,8 +38,8 @@
     <string name="notifications_permission_rationale">MainLert needs access to notifications to alert you when service readings reach critical levels.</string>
     <string name="grant_permissions">Grant Permissions</string>
     <string name="dismiss">Dismiss</string>
-    <string name="deadlock_alert_title">Service Deadlock Alert</string>
-    <string name="deadlock_alert_message">Service readings have reached critical levels. Immediate maintenance required.</string>
+    <string name="mileage_alert_title">Service Mileage Alert</string>
+    <string name="mileage_alert_message">Service readings have reached critical levels. Immediate maintenance required.</string>
     <string name="movement_detected">Vehicle movement detected</string>
     <string name="stationary">Vehicle stationary</string>
     <string name="battery_optimization">Battery Optimization</string>

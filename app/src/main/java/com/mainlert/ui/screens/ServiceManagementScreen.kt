@@ -191,13 +191,13 @@ fun serviceManagementScreen(
                             ) {
                                 Button(
                                     onClick = {
-                                        val deadlockLimit = selectedVariant?.deadlockLimit ?: 1000f
+                                        val mileageLimit = selectedVariant?.mileageLimit ?: 1000f
                                         if (editingService != null) {
                                             dashboardViewModel.updateService(
                                                 editingService!!.id,
                                                 serviceName,
                                                 serviceDescription,
-                                                deadlockLimit,
+                                                mileageLimit,
                                                 "",
                                                 selectedVariant?.id ?: "",
                                                 selectedVariant?.name ?: "Standard",
@@ -206,7 +206,7 @@ fun serviceManagementScreen(
                                             dashboardViewModel.createService(
                                                 serviceName,
                                                 serviceDescription,
-                                                deadlockLimit,
+                                                mileageLimit,
                                                 "",
                                                 selectedVariant?.id ?: "",
                                                 selectedVariant?.name ?: "Standard",
@@ -348,7 +348,7 @@ fun ServiceVariantDropdown(
                         Column {
                             Text(variant.name)
                             Text(
-                                text = "Limit: ${variant.deadlockLimit.toInt()}",
+                                text = "Limit: ${variant.mileageLimit.toInt()}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             )
@@ -435,11 +435,11 @@ fun SimpleServiceItem(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Deadlock Limit:",
+                        text = "Mileage Limit:",
                         style = MaterialTheme.typography.labelSmall,
                     )
                     Text(
-                        text = "${service.deadlockLimit.toInt()}",
+                        text = "${service.mileageLimit.toInt()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
                     )

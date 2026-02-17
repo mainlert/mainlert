@@ -71,12 +71,12 @@ class AccelerometerService : Service(), SensorEventListener {
 
     // Service constants
     private val notificationChannelId = "accelerometer_channel"
-    private val deadlockNotificationChannelId = "deadlock_notifications_channel"
+    private val mileageNotificationChannelId = "mileage_notifications_channel"
     private val notificationId = 1
-    private val deadlockNotificationId = 2
+    private val mileageNotificationId = 2
 
     // Duplicate notification prevention
-    private var lastDeadlockNotificationTime = 0L
+    private var lastMileageNotificationTime = 0L
     private val notificationCooldown = TimeUnit.MINUTES.toMillis(30) // 30 minutes cooldown
 
     // Movement tracking variables
@@ -84,7 +84,7 @@ class AccelerometerService : Service(), SensorEventListener {
     private var movementBuffer = mutableListOf<Float>()
     private var bufferMaxSize = 100
     private var currentServiceId: String? = null
-    private var currentServiceDeadlockLimit: Float = 1000f // Default deadlock limit
+    private var currentServiceMileageLimit: Float = 1000f // Default mileage limit
 
     // Service reading calculation - using gravity-compensated movement
     private var totalMovement = 0f
@@ -143,13 +143,13 @@ class AccelerometerService : Service(), SensorEventListener {
             ACTION_START_MONITORING -> {
                 currentServiceId = intent.getStringExtra(EXTRA_SERVICE_ID)
                 android.util.Log.i("AccelerometerService", "START_MONITORING received, serviceId: $currentServiceId")
-                // Fetch service details to get deadlock limit (only once at startup)
+                // Fetch service details to get mileage limit (only once at startup)
                 serviceScope.launch {
                     currentServiceId?.let { serviceId ->
                         val serviceResult = serviceRepository.getServiceById(serviceId)
                         if (serviceResult is com.mainlert.data.models.Result.Success) {
-                            currentServiceDeadlockLimit = serviceResult.data?.deadlockLimit ?: 1000f
-                            android.util.Log.d("AccelerometerService", "Deadlock limit set to: $currentServiceDeadlockLimit")
+                            currentServiceMileageLimit = serviceResult.data?.mileageLimit ?: 1000f
+                            android.util.Log.d("AccelerometerService", "Mileage limit set to: $currentServiceMileageLimit")
                         }
                     }
                 }
@@ -187,13 +187,13 @@ class AccelerometerService : Service(), SensorEventListener {
                     enableVibration(false)
                 }
 
-            val deadlockChannel =
+            val mileageChannel =
                 NotificationChannel(
-                    deadlockNotificationChannelId,
-                    "Deadlock Notifications",
+                    mileageNotificationChannelId,
+                    "Mileage Notifications",
                     NotificationManager.IMPORTANCE_HIGH,
                 ).apply {
-                    description = "Alerts when a vehicle service reaches deadlock state"
+                    description = "Alerts when a vehicle service reaches mileage limit"
                     enableLights(true)
                     enableVibration(true)
                     vibrationPattern = longArrayOf(0, 500, 250, 500) // Pattern: 0ms delay, 500ms vibrate, 250ms pause, 500ms vibrate
@@ -202,27 +202,27 @@ class AccelerometerService : Service(), SensorEventListener {
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
-            notificationManager.createNotificationChannel(deadlockChannel)
+            notificationManager.createNotificationChannel(mileageChannel)
         }
     }
 
     /**
-     * Shows a deadlock notification to alert the user that the service reading has reached the deadlock limit.
+     * Shows a mileage notification to alert the user that the service reading has reached the mileage limit.
      */
-    private fun showDeadlockNotification() {
+    private fun showMileageNotification() {
         val currentTime = System.currentTimeMillis()
 
         // Prevent duplicate notifications within cooldown period
-        if (currentTime - lastDeadlockNotificationTime < notificationCooldown) {
+        if (currentTime - lastMileageNotificationTime < notificationCooldown) {
             return
         }
 
-        lastDeadlockNotificationTime = currentTime
+        lastMileageNotificationTime = currentTime
 
         val notification =
-            NotificationCompat.Builder(this, deadlockNotificationChannelId)
-                .setContentTitle("Deadlock Detected")
-                .setContentText("Service reading has reached the deadlock limit - your vehicle needs service")
+            NotificationCompat.Builder(this, mileageNotificationChannelId)
+                .setContentTitle("Mileage Limit Reached")
+                .setContentText("Service reading has reached the mileage limit - your vehicle needs service")
                 .setSmallIcon(android.R.drawable.ic_dialog_alert)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
@@ -231,7 +231,7 @@ class AccelerometerService : Service(), SensorEventListener {
                 .build()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(deadlockNotificationId, notification)
+        notificationManager.notify(mileageNotificationId, notification)
     }
 
     private fun startMonitoring() {
@@ -402,8 +402,8 @@ class AccelerometerService : Service(), SensorEventListener {
             val avgMovement = movementBuffer.average().toFloat()
             isVehicleMovement = avgMovement > crashThreshold
 
-            // Check for deadlock condition
-            checkForDeadlock()
+            // Check for mileage limit condition
+            checkForMileageLimit()
         }
 
         // Broadcast accelerometer readings to UI every 500ms (throttled)
@@ -436,12 +436,12 @@ class AccelerometerService : Service(), SensorEventListener {
     }
 
     /**
-     * Checks if deadlock limit reached and handles it.
+     * Checks if mileage limit reached and handles it.
      */
-    private fun checkForDeadlock() {
-        // Check if total movement has reached the deadlock limit while in vehicle movement
-        if (isVehicleMovement && totalMovement >= currentServiceDeadlockLimit) {
-            android.util.Log.i("AccelerometerService", "DEADLOCK DETECTED! totalMovement=$totalMovement, limit=$currentServiceDeadlockLimit")
+    private fun checkForMileageLimit() {
+        // Check if total movement has reached the mileage limit while in vehicle movement
+        if (isVehicleMovement && totalMovement >= currentServiceMileageLimit) {
+            android.util.Log.i("AccelerometerService", "MILEAGE LIMIT REACHED! totalMovement=$totalMovement, limit=$currentServiceMileageLimit")
 
             // Send final reading to Firebase
             currentServiceId?.let { serviceId ->
@@ -460,12 +460,12 @@ class AccelerometerService : Service(), SensorEventListener {
 
                 serviceScope.launch {
                     serviceRepository.addServiceReading(reading)
-                    android.util.Log.d("AccelerometerService", "Deadlock reading saved to Firebase")
+                    android.util.Log.d("AccelerometerService", "Mileage limit reading saved to Firebase")
                 }
             }
 
             // Show notification
-            showDeadlockNotification()
+            showMileageNotification()
 
             // Stop monitoring
             stopMonitoring()

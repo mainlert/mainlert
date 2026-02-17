@@ -94,9 +94,9 @@ interface ServiceRepository {
     fun observeServiceReadings(serviceId: String): Flow<List<ServiceReading>>
 
     /**
-     * Check if service has reached deadlock
+     * Check if service has reached mileage limit
      */
-    suspend fun checkDeadlockStatus(serviceId: String): Result<Boolean>
+    suspend fun checkMileageStatus(serviceId: String): Result<Boolean>
 
     /**
      * Get current active service for user (legacy method)

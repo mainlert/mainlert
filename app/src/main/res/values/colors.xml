@@ -30,7 +30,7 @@
     <!-- Status colors -->
     <color name="monitoring_active">#27AE60</color>
     <color name="monitoring_inactive">#E74C3C</color>
-    <color name="deadlock_critical">#E74C3C</color>
-    <color name="deadlock_warning">#F1C40F</color>
-    <color name="deadlock_normal">#27AE60</color>
+    <color name="mileage_critical">#E74C3C</color>
+    <color name="mileage_warning">#F1C40F</color>
+    <color name="mileage_normal">#27AE60</color>
 </resources>

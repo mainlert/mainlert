@@ -50,7 +50,7 @@ fun serviceDetailsScreen(
 ) {
     var isMonitoring by remember { mutableStateOf(false) }
     var currentReadings by remember { mutableStateOf(0) }
-    var deadlockThreshold by remember { mutableStateOf(20000) }
+    var mileageThreshold by remember { mutableStateOf(20000) }
 
     // Observe authentication state
     val isLoading by authViewModel.isLoading.collectAsState()
@@ -147,7 +147,7 @@ fun serviceDetailsScreen(
                             "$serviceReadings",
                             style = MaterialTheme.typography.bodyLarge,
                             color =
-                                if (serviceReadings >= deadlockThreshold) {
+                                if (serviceReadings >= mileageThreshold) {
                                     MaterialTheme.colorScheme.error
                                 } else {
                                     MaterialTheme.colorScheme.primary
@@ -161,8 +161,8 @@ fun serviceDetailsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Text("Deadlock Threshold", style = MaterialTheme.typography.bodyMedium)
-                        Text("$deadlockThreshold", style = MaterialTheme.typography.bodyLarge)
+                        Text("Mileage Threshold", style = MaterialTheme.typography.bodyMedium)
+                        Text("$mileageThreshold", style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }

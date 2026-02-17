@@ -215,7 +215,7 @@ class FirebaseServiceRepositoryImpl
             }
         }
 
-        override suspend fun checkDeadlockStatus(serviceId: String): Result<Boolean> {
+        override suspend fun checkMileageStatus(serviceId: String): Result<Boolean> {
             return try {
                 val serviceResult = getServiceById(serviceId)
                 val readingsResult = getServiceReadings(serviceId)
@@ -223,15 +223,15 @@ class FirebaseServiceRepositoryImpl
                 if (serviceResult is Result.Success && readingsResult is Result.Success) {
                     val totalMovement = readingsResult.data?.sumOf { it.totalMovement.toDouble() } ?: 0.0
 
-                    // Check if total movement exceeds service's deadlock limit
-                    val isDeadlock = totalMovement >= serviceResult.data?.deadlockLimit?.toDouble() ?: 0.0
+                    // Check if total movement exceeds service's mileage limit
+                    val isMileageExceeded = totalMovement >= serviceResult.data?.mileageLimit?.toDouble() ?: 0.0
 
-                    Result.Success(isDeadlock)
+                    Result.Success(isMileageExceeded)
                 } else {
-                    Result.Failure("Failed to check deadlock status")
+                    Result.Failure("Failed to check mileage status")
                 }
             } catch (e: Exception) {
-                Result.Failure(e.message ?: "Failed to check deadlock status")
+                Result.Failure(e.message ?: "Failed to check mileage status")
             }
         }
 
@@ -394,7 +394,7 @@ class FirebaseServiceRepositoryImpl
                     val totalMovement = readings.sumOf { it.totalMovement.toDouble() }
                     val averageMovement = if (totalReadings > 0) totalMovement / totalReadings else 0.0
                     val lastReadingTime = readings.maxOfOrNull { it.timestamp } ?: 0L
-                    val isDeadlockDetected = totalMovement >= service.deadlockLimit.toDouble()
+                    val isMileageExceeded = totalMovement >= service.mileageLimit.toDouble()
 
                     val summary =
                         ServiceStatusSummary(
@@ -404,7 +404,7 @@ class FirebaseServiceRepositoryImpl
                             averageMovement = averageMovement.toFloat(),
                             isMonitoring = service.isMonitoring,
                             lastReadingTime = lastReadingTime,
-                            isDeadlockDetected = isDeadlockDetected,
+                            isMileageExceeded = isMileageExceeded,
                         )
 
                     Result.Success(summary)
@@ -437,7 +437,7 @@ class FirebaseServiceRepositoryImpl
                                     0L
                                 },
                             "readingsPerHour" to calculateReadingsPerHour(readings),
-                            "deadlockRisk" to calculateDeadlockRisk(readings),
+                            "mileageRisk" to calculateMileageRisk(readings),
                         )
 
                     Result.Success(analytics)
@@ -485,7 +485,7 @@ class FirebaseServiceRepositoryImpl
             return if (durationHours > 0) readings.size.toDouble() / durationHours else 0.0
         }
 
-        private fun calculateDeadlockRisk(readings: List<ServiceReading>): String {
+        private fun calculateMileageRisk(readings: List<ServiceReading>): String {
             val totalMovement = readings.sumOf { it.totalMovement.toDouble() }
             val averageMovement = readings.map { it.totalMovement }.average()
 

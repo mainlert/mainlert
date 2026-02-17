@@ -145,10 +145,10 @@ class DashboardViewModel
     val isServiceActive: StateFlow<Boolean> = _isServiceActive.asStateFlow()
 
     /**
-     * Deadlock threshold value for service readings.
+     * Mileage threshold value for service readings.
      */
-    private val _deadlockThreshold = MutableStateFlow(20000)
-    val deadlockThreshold: StateFlow<Int> = _deadlockThreshold.asStateFlow()
+    private val _mileageThreshold = MutableStateFlow(20000)
+    val mileageThreshold: StateFlow<Int> = _mileageThreshold.asStateFlow()
 
     /**
      * Service status summary with detailed information.
@@ -393,25 +393,25 @@ class DashboardViewModel
                 lastReadingTime = System.currentTimeMillis(),
             )
 
-        // Check for deadlock
-        if (readings >= deadlockThreshold.value) {
-            _errorMessage.value = "Deadlock detected! Service has reached threshold."
+        // Check for Mileage
+        if (readings >= mileageThreshold.value) {
+            _errorMessage.value = "Mileage detected! Service has reached threshold."
         }
     }
 
-    fun checkDeadlockStatus(serviceId: String) {
+    fun checkMileageStatus(serviceId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
 
-            when (val result = serviceRepository.checkDeadlockStatus(serviceId)) {
+            when (val result = serviceRepository.checkMileageStatus(serviceId)) {
                 is Result.Success -> {
                     if (result.data == true) {
-                        _errorMessage.value = "Service has reached deadlock threshold!"
+                        _errorMessage.value = "Service has reached Mileage threshold!"
                     }
                 }
                 is Result.Failure -> {
-                    _errorMessage.value = result.message ?: "Failed to check deadlock status"
+                    _errorMessage.value = result.message ?: "Failed to check Mileage status"
                 }
             }
 
@@ -438,8 +438,8 @@ class DashboardViewModel
                         totalReadings = readings.size,
                     )
 
-                // Check for deadlock against each vehicle service's individual limit
-                checkDeadlockForAllServices()
+                // Check for Mileage against each vehicle service's individual limit
+                checkMileageForAllServices()
             }
         }
     }
@@ -457,12 +457,12 @@ class DashboardViewModel
                         _isServiceActive.value = summary.isMonitoring
                         _serviceReadings.value = summary.totalMovement.toInt()
 
-                        // Update deadlock threshold based on service configuration
+                        // Update Mileage threshold based on service configuration
                         currentServiceId?.let { id ->
                             when (val serviceResult = serviceRepository.getServiceById(id)) {
                                 is Result.Success -> {
                                     serviceResult.data?.let { service ->
-                                        _deadlockThreshold.value = service.deadlockLimit.toInt()
+                                        _mileageThreshold.value = service.mileageLimit.toInt()
                                     }
                                 }
                                 is Result.Failure -> {
@@ -487,7 +487,7 @@ class DashboardViewModel
     fun createService(
         name: String,
         description: String,
-        deadlockLimit: Float,
+        mileageLimit: Float,
         vehicleId: String = "",
         variantId: String = "",
         variantName: String = "",
@@ -503,8 +503,8 @@ class DashboardViewModel
                 return@launch
             }
 
-            if (deadlockLimit <= 0) {
-                _errorMessage.value = "Deadlock limit must be greater than 0"
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
                 _isLoading.value = false
                 return@launch
             }
@@ -513,7 +513,7 @@ class DashboardViewModel
                 Service(
                     name = name,
                     description = description,
-                    deadlockLimit = deadlockLimit,
+                    mileageLimit = mileageLimit,
                     vehicleIds = if (vehicleId.isNotEmpty()) listOf(vehicleId) else emptyList(),
                     variantId = variantId,
                     variantName = variantName.ifEmpty { "Standard" },
@@ -544,7 +544,7 @@ class DashboardViewModel
         serviceId: String,
         name: String,
         description: String,
-        deadlockLimit: Float,
+        mileageLimit: Float,
         vehicleId: String = "",
         variantId: String = "",
         variantName: String = "",
@@ -560,8 +560,8 @@ class DashboardViewModel
                 return@launch
             }
 
-            if (deadlockLimit <= 0) {
-                _errorMessage.value = "Deadlock limit must be greater than 0"
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
                 _isLoading.value = false
                 return@launch
             }
@@ -574,7 +574,7 @@ class DashboardViewModel
                             service.copy(
                                 name = name,
                                 description = description,
-                                deadlockLimit = deadlockLimit,
+                                mileageLimit = mileageLimit,
                                 vehicleIds = if (vehicleId.isEmpty()) service.vehicleIds else listOf(vehicleId),
                                 variantId = variantId.ifEmpty { service.variantId },
                                 variantName = variantName.ifEmpty { service.variantName.ifEmpty { "Standard" } },
@@ -592,7 +592,7 @@ class DashboardViewModel
 
                                 // Update current service if it's the one being edited
                                 if (currentServiceId == serviceId) {
-                                    _deadlockThreshold.value = deadlockLimit.toInt()
+                                    _mileageThreshold.value = mileageLimit.toInt()
                                 }
                             }
                             is Result.Failure -> {
@@ -702,15 +702,15 @@ class DashboardViewModel
     }
 
     /**
-     * Checks deadlock status for all vehicle services.
-     * Notification triggers when readings reach any service's deadlock limit.
+     * Checks Mileage status for all vehicle services.
+     * Notification triggers when readings reach any service's Mileage limit.
      */
-    fun checkDeadlockForAllServices() {
-        // Check each vehicle service's deadlock limit
+    fun checkMileageForAllServices() {
+        // Check each vehicle service's Mileage limit
         _vehicleServices.value.forEach { service ->
-            if (_serviceReadings.value >= service.deadlockLimit.toInt()) {
-                _errorMessage.value = "Deadlock detected! ${service.variantName.ifEmpty { service.name }} has reached threshold."
-                android.util.Log.i("DashboardViewModel", "DEADLOCK: ${service.name} reached ${service.deadlockLimit} (current: ${_serviceReadings.value})")
+            if (_serviceReadings.value >= service.mileageLimit.toInt()) {
+                _errorMessage.value = "Mileage detected! ${service.variantName.ifEmpty { service.name }} has reached threshold."
+                android.util.Log.i("DashboardViewModel", "MILEAGE: ${service.name} reached ${service.mileageLimit} (current: ${_serviceReadings.value})")
             }
         }
     }
@@ -907,7 +907,7 @@ class DashboardViewModel
     fun createServiceVariant(
         name: String,
         description: String,
-        deadlockLimit: Float,
+        mileageLimit: Float,
         createdBy: String,
     ) {
         viewModelScope.launch {
@@ -920,8 +920,8 @@ class DashboardViewModel
                 return@launch
             }
 
-            if (deadlockLimit <= 0) {
-                _errorMessage.value = "Deadlock limit must be greater than 0"
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
                 _isLoading.value = false
                 return@launch
             }
@@ -930,7 +930,7 @@ class DashboardViewModel
                 ServiceVariant(
                     name = name,
                     description = description,
-                    deadlockLimit = deadlockLimit,
+                    mileageLimit = mileageLimit,
                     createdBy = createdBy,
                 )
 
@@ -977,7 +977,7 @@ class DashboardViewModel
         variantId: String,
         name: String,
         description: String,
-        deadlockLimit: Float,
+        mileageLimit: Float,
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -989,8 +989,8 @@ class DashboardViewModel
                 return@launch
             }
 
-            if (deadlockLimit <= 0) {
-                _errorMessage.value = "Deadlock limit must be greater than 0"
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
                 _isLoading.value = false
                 return@launch
             }
@@ -1003,7 +1003,7 @@ class DashboardViewModel
                             variant.copy(
                                 name = name,
                                 description = description,
-                                deadlockLimit = deadlockLimit,
+                                mileageLimit = mileageLimit,
                             )
 
                         when (val updateResult = serviceVariantRepository.updateVariant(updatedVariant)) {
@@ -1292,7 +1292,7 @@ class DashboardViewModel
                             }
                             _isMonitoring.value = true
                             _isServiceActive.value = true
-                            _deadlockThreshold.value = firstService.deadlockLimit.toInt()
+                            _mileageThreshold.value = firstService.mileageLimit.toInt()
 
                             _serviceStatus.value = ServiceStatusSummary(
                                 serviceId = firstService.id,
@@ -1301,7 +1301,7 @@ class DashboardViewModel
                                 averageMovement = 0f,
                                 isMonitoring = true,
                                 lastReadingTime = System.currentTimeMillis(),
-                                isDeadlockDetected = false,
+                                isMileageExceeded = false,
                             )
 
                             _successMessage.value = "Monitoring started for ${vehicle.name}"

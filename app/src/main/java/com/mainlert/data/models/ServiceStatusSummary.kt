@@ -11,5 +11,5 @@ data class ServiceStatusSummary(
     val averageMovement: Float,
     val isMonitoring: Boolean,
     val lastReadingTime: Long,
-    val isDeadlockDetected: Boolean,
+    val isMileageExceeded: Boolean,
 )

@@ -748,14 +748,14 @@ fun ServiceVariantsTab(
     var showCreateForm by remember { mutableStateOf(false) }
     var variantName by remember { mutableStateOf("") }
     var variantDescription by remember { mutableStateOf("") }
-    var deadlockLimit by remember { mutableStateOf("1000") }
+    var mileageLimit by remember { mutableStateOf("1000") }
     
     // Edit dialog state
     var showEditDialog by remember { mutableStateOf(false) }
     var variantToEdit by remember { mutableStateOf<ServiceVariant?>(null) }
     var editVariantName by remember { mutableStateOf("") }
     var editVariantDescription by remember { mutableStateOf("") }
-    var editDeadlockLimit by remember { mutableStateOf("") }
+    var editMileageLimit by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (isLoading) CircularProgressIndicator(modifier = Modifier.padding(16.dp))
@@ -776,14 +776,14 @@ fun ServiceVariantsTab(
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(value = variantDescription, onValueChange = { variantDescription = it }, label = { Text("Description") }, modifier = Modifier.fillMaxWidth())
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(value = deadlockLimit, onValueChange = { deadlockLimit = it }, label = { Text("Deadlock Limit") }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = mileageLimit, onValueChange = { mileageLimit = it }, label = { Text("Mileage Limit") }, modifier = Modifier.fillMaxWidth())
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = {
-                            dashboardViewModel.createServiceVariant(name = variantName, description = variantDescription, deadlockLimit = deadlockLimit.toFloatOrNull() ?: 1000f, createdBy = "")
+                            dashboardViewModel.createServiceVariant(name = variantName, description = variantDescription, mileageLimit = mileageLimit.toFloatOrNull() ?: 1000f, createdBy = "")
                             variantName = ""
                             variantDescription = ""
-                            deadlockLimit = "1000"
+                            mileageLimit = "1000"
                             showCreateForm = false
                         },
                         enabled = variantName.isNotBlank(),
@@ -809,7 +809,7 @@ fun ServiceVariantsTab(
                             variantToEdit = variant
                             editVariantName = variant.name
                             editVariantDescription = variant.description
-                            editDeadlockLimit = variant.deadlockLimit.toInt().toString()
+                            editMileageLimit = variant.mileageLimit.toInt().toString()
                             showEditDialog = true
                         }
                     )
@@ -840,9 +840,9 @@ fun ServiceVariantsTab(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
-                        value = editDeadlockLimit,
-                        onValueChange = { editDeadlockLimit = it.filter { char -> char.isDigit() } },
-                        label = { Text("Deadlock Limit") },
+                        value = editMileageLimit,
+                        onValueChange = { editMileageLimit = it.filter { char -> char.isDigit() } },
+                        label = { Text("Mileage Limit") },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -854,7 +854,7 @@ fun ServiceVariantsTab(
                             variantId = variantToEdit!!.id,
                             name = editVariantName,
                             description = editVariantDescription,
-                            deadlockLimit = editDeadlockLimit.toFloatOrNull() ?: variantToEdit!!.deadlockLimit
+                            mileageLimit = editMileageLimit.toFloatOrNull() ?: variantToEdit!!.mileageLimit
                         )
                         showEditDialog = false
                         variantToEdit = null
@@ -881,7 +881,7 @@ fun ServiceVariantCard(variant: ServiceVariant, onDelete: () -> Unit, onEdit: ()
                 Text(variant.name, style = MaterialTheme.typography.titleMedium)
                 Text(variant.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Deadlock Limit: ${variant.deadlockLimit.toInt()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Text("Mileage Limit: ${variant.mileageLimit.toInt()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             }
             Row {
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary) }
