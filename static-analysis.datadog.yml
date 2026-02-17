@@ -1,0 +1,6 @@
+schema-version: v1
+rulesets:
+  - kotlin-security
+  - kotlin-inclusive
+  - kotlin-code-style
+  - kotlin-best-practices

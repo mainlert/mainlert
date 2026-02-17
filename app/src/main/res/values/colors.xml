@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom MainLert colors (not Material Design) -->
+    <color name="primary">#2C3E50</color>
+    <color name="primary_dark">#1A2530</color>
+    <color name="primary_light">#34495E</color>
+    <color name="secondary">#E74C3C</color>
+    <color name="secondary_dark">#C0392B</color>
+    <color name="secondary_light">#EC7063</color>
+    <color name="accent">#F1C40F</color>
+    <color name="accent_dark">#F39C12</color>
+    <color name="background">#F8F9FA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_primary">#2C3E50</color>
+    <color name="text_secondary">#7F8C8D</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_secondary">#FFFFFF</color>
+    <color name="text_on_accent">#2C3E50</color>
+    <color name="error">#E74C3C</color>
+    <color name="error_dark">#C0392B</color>
+    <color name="success">#27AE60</color>
+    <color name="success_dark">#229954</color>
+    <color name="warning">#F1C40F</color>
+    <color name="warning_dark">#F39C12</color>
+    <color name="info">#3498DB</color>
+    <color name="info_dark">#2980B9</color>
+    <color name="divider">#E0E0E0</color>
+    <color name="shadow">#000000</color>
+    
+    <!-- Status colors -->
+    <color name="monitoring_active">#27AE60</color>
+    <color name="monitoring_inactive">#E74C3C</color>
+    <color name="deadlock_critical">#E74C3C</color>
+    <color name="deadlock_warning">#F1C40F</color>
+    <color name="deadlock_normal">#27AE60</color>
+</resources>

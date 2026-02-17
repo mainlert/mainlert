@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color -->
+    <item android:drawable="@color/background" />
+    
+    <!-- Logo in the center -->
+    <item
+        android:gravity="center"
+        android:drawable="@drawable/ic_notification" />
+    
+    <!-- App name text at the bottom -->
+    <item
+        android:gravity="bottom|center_horizontal"
+        android:bottom="80dp">
+        <shape>
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+</layer-list>

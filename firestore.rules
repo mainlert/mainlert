@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserData().role == 'ADMIN';
+    }
+    
+    function isEmployee() {
+      return isAuthenticated() && (getUserData().role == 'EMPLOYEE' || getUserData().role == 'ADMIN');
+    }
+    
+    function isDriver() {
+      return isAuthenticated() && getUserData().role == 'DRIVER';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isManagerOf(driverId) {
+      return isEmployee() && getUserData().managedDriverIds.hasAll([driverId]);
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isAdmin() || isEmployee());
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Vehicles collection
+    match /vehicles/{vehicleId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isAdmin() || isEmployee());
+      allow update: if isAuthenticated() && (isAdmin() || isEmployee());
+      allow delete: if isAdmin();
+    }
+
+    // Service variants collection
+    match /service_variants/{variantId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isAdmin() || isEmployee());
+    }
+
+    // Services collection
+    match /services/{serviceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (isAdmin() || isEmployee());
+      allow update: if isAuthenticated() && (isAdmin() || isEmployee());
+      allow delete: if isAdmin();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.userId || isEmployee());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Settings collection
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}

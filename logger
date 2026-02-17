@@ -1,0 +1,66 @@
+========================================
+MainLert Logcat Session
+Started: Wed Feb 11 11:08:42 PM GMT 2026
+Package: com.mainlert.mainlertapp
+Device: emulator-5554
+Log Level: V
+========================================
+
+[2026-02-11 23:09:12] 02-11 23:08:48.019   981  1747 D ArcAppLauncherService: Request app icon: com.mainlert.ui.SplashActivity/32
+[2026-02-11 23:09:12] 02-11 23:08:48.073   981  1747 D ArcAppLauncherService: Request app icon: com.mainlert.ui.SplashActivity/64
+[2026-02-11 23:09:12] 02-11 23:08:49.651   414   526 D ArcQosManager: Task created: 815 - ComponentInfo{com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity} .
+[2026-02-11 23:09:12] 02-11 23:08:49.659   981  2300 D ArcAppTaskTracker: Task created: 815 - ComponentInfo{com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity} .
+[2026-02-11 23:09:12] 02-11 23:08:49.867   162   162 D wayland-service: Creating app window for task_id 815 from package 'com.mainlert.mainlertapp' with remote shell
+[2026-02-11 23:09:12] 02-11 23:08:50.145   162   178 D wayland-service: Moving task_id 815 from package 'com.mainlert.mainlertapp' to front
+[2026-02-11 23:09:12] 02-11 23:08:50.146   162   178 D wayland-service: Activating window for task_id 815 from package 'com.mainlert.mainlertapp
+[2026-02-11 23:09:12] 02-11 23:08:50.433 20575 20679 I SplashActivity: Admin user initialization completed successfully
+[2026-02-11 23:09:12] 02-11 23:08:50.698   414   429 W ziparchive: Unable to open '/data/app/~~KVM8aceziZo_bCge2C_4cA==/com.mainlert.mainlertapp-4NYnEtOZ1T5MeeZxPTyk8w==/base.dm': No such file or directory
+[2026-02-11 23:09:12] 02-11 23:08:50.720   414   429 I ActivityTaskManager: Displayed com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity: +1s131ms
+[2026-02-11 23:09:12] 02-11 23:08:51.110   414   823 W InputManager-JNI: Input channel object '1af32ef Splash Screen com.mainlert.mainlertapp (client)' was disposed without first being removed with the input manager!
+[2026-02-11 23:09:12] 02-11 23:08:51.118   414   427 D CoreBackPreview: Window{1af32ef u0 Splash Screen com.mainlert.mainlertapp EXITING}: Setting back callback null
+[2026-02-11 23:09:12] 02-11 23:08:53.147   414   755 I ActivityTaskManager: START u0 {cmp=com.mainlert.mainlertapp/com.mainlert.ui.MainActivity} from uid 10187
+[2026-02-11 23:09:12] 02-11 23:08:53.855   414   429 I ActivityTaskManager: Displayed com.mainlert.mainlertapp/com.mainlert.ui.MainActivity: +695ms
+[2026-02-11 23:09:12] 02-11 23:08:54.639   414   755 D CoreBackPreview: Window{ba91600 u0 com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity}: Setting back callback null
+[2026-02-11 23:09:12] 02-11 23:08:54.644   414   755 W InputManager-JNI: Input channel object 'ba91600 com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity (client)' was disposed without first being removed with the input manager!
+[2026-02-11 23:09:12] 02-11 23:08:54.770 20575 20575 D DashboardViewModel: Accelerometer receiver registered
+[2026-02-11 23:09:12] 02-11 23:09:10.312   414   427 D ConnectivityService: requestNetwork for uid/pid:10187/20575 activeRequest: null callbackRequest: 1158 [NetworkRequest [ REQUEST id=1159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10187 RequestorUid: 10187 RequestorPkg: com.mainlert.mainlertapp UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
+[2026-02-11 23:09:12] 02-11 23:09:10.314   414   526 D ArcWifiFactory(eth5): got request NetworkRequest [ REQUEST id=1159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10187 RequestorUid: 10187 RequestorPkg: com.mainlert.mainlertapp UnderlyingNetworks: Null] ]
+[2026-02-11 23:09:12] 02-11 23:09:10.353 20575 20575 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=false <<<
+[2026-02-11 23:09:12] 02-11 23:09:10.706 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6030): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:12] 02-11 23:09:10.714 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6031): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:12] 02-11 23:09:10.716 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6032): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6033): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6034): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6035): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
+[2026-02-11 23:09:25] 02-11 23:09:15.013 20575 20575 D RoundedButton: >>> Button onClick lambda executed <<<
+[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 D Dashboard: >>> BUTTON CLICKED! isMonitoring=false <<<
+[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 D Dashboard: >>> Calling onToggleMonitoring()
+[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 I DashboardViewModel: >>> START BUTTON CLICKED <<<
+[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D DashboardViewModel: Vehicle count: 3
+[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D DashboardViewModel: Multiple vehicles (3), showing selection dialog
+[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D Dashboard: >>> Calling onInteraction()
+[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D Dashboard: >>> Button handler complete
+[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D RoundedButton: >>> Button onClick lambda complete <<<
+[2026-02-11 23:09:26] 02-11 23:09:15.146 20575 20575 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=false <<<
+[2026-02-11 23:09:26] 02-11 23:09:15.773   414   506 I InputDispatcher: Not sending motion to 894d00a com.mainlert.mainlertapp/com.mainlert.ui.MainActivity, window opacity=0.071228 is below the threshold
+[2026-02-11 23:09:26] 02-11 23:09:23.155 20575 20575 I DashboardViewModel: >>> startMonitoringForVehicle called with vehicleId: aHr8YRYB3PaYZcIk9xcX <<<
+[2026-02-11 23:09:26] 02-11 23:09:23.162 20575 20575 D DashboardViewModel: Found vehicle: Dorflix
+[2026-02-11 23:09:26] 02-11 23:09:23.162 20575 20575 D DashboardViewModel: Fetching services for vehicleId: aHr8YRYB3PaYZcIk9xcX
+[2026-02-11 23:09:26] 02-11 23:09:23.249   414   755 D CoreBackPreview: Window{894d00a u0 com.mainlert.mainlertapp/com.mainlert.ui.MainActivity}: Setting back callback null
+[2026-02-11 23:09:26] 02-11 23:09:23.318   414   755 W InputManager-JNI: Input channel object '894d00a com.mainlert.mainlertapp/com.mainlert.ui.MainActivity (client)' was disposed without first being removed with the input manager!
+[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Found 1 services for vehicle
+[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Using first service: I6dsNjkzs2RJBafh96L5, name: Engine oil & oil filter change
+[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Starting service monitoring for: I6dsNjkzs2RJBafh96L5
+[2026-02-11 23:09:26] 02-11 23:09:24.265 20575 20575 D DashboardViewModel: Firebase monitoring started, calling AccelerometerService.startService
+[2026-02-11 23:09:26] 02-11 23:09:24.289 20575 20575 I DashboardViewModel: AccelerometerService started successfully
+[2026-02-11 23:09:26] 02-11 23:09:24.291 20575 20575 I DashboardViewModel: Monitoring started successfully for: Dorflix
+[2026-02-11 23:09:26] 02-11 23:09:24.304 20575 20575 I AccelerometerService: >>> onStartCommand called with action: com.mainlert.mainlertapp.START_MONITORING
+[2026-02-11 23:09:26] 02-11 23:09:24.304 20575 20575 I AccelerometerService: START_MONITORING received, serviceId: I6dsNjkzs2RJBafh96L5
+[2026-02-11 23:09:26] 02-11 23:09:24.307 20575 20575 I AccelerometerService: >>> startMonitoring() called
+[2026-02-11 23:09:26] 02-11 23:09:24.307 20575 20575 D AccelerometerService: Creating foreground notification...
+[2026-02-11 23:09:26] 02-11 23:09:24.336 20575 20575 D AccelerometerService: Starting foreground service...
+[2026-02-11 23:09:26] 02-11 23:09:24.339 20575 20575 I AccelerometerService: Foreground notification started
+[2026-02-11 23:09:26] 02-11 23:09:24.339 20575 20575 D AccelerometerService: Registering accelerometer sensor: CrosEC Accelerometer
+[2026-02-11 23:09:26] 02-11 23:09:24.355 20575 20575 I AccelerometerService: Accelerometer sensor registered successfully
+[2026-02-11 23:09:26] 02-11 23:09:24.377 20575 20575 D AccelerometerService: Broadcast sent: true, totalMovement=9.463061
+[2026-02-11 23:09:26] 02-11 23:09:24.377 20575 20575 D DashboardViewModel: Updated readings: x=-1.1336538, y=-1.0594336, z=9.334986
