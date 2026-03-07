@@ -3,40 +3,28 @@ package com.mainlert.services
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
-import android.os.Process
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.mainlert.data.models.VehicleServiceMapping
+import com.google.firebase.auth.FirebaseAuth
+import com.mainlert.data.models.ServiceReading
 import com.mainlert.data.repositories.ServiceRepository
-import com.mainlert.data.repositories.VehicleRepository
-import com.mainlert.data.repositories.VehicleServiceMappingRepository
 import dagger.hilt.android.AndroidEntryPoint
-import com.mainlert.services.BootReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.math.sqrt
-import android.util.Log
 
 /**
  * Foreground service for monitoring accelerometer data with sensor fusion.
@@ -50,74 +38,14 @@ import android.util.Log
  */
 @AndroidEntryPoint
 class AccelerometerService : Service(), SensorEventListener {
-    companion object {
-           private const val TAG = "AccelerometerService"
-            
-            // Intent actions
-            const val ACTION_START_MONITORING = "com.mainlert.mainlertapp.START_MONITORING"
-            const val ACTION_STOP_MONITORING = "com.mainlert.mainlertapp.STOP_MONITORING"
-            const val ACTION_RETRY_LOADING = "com.mainlert.mainlertapp.RETRY_LOADING"
-            const val ACTION_BROADCAST_ACCELEROMETER = "com.mainlert.mainlertapp.BROADCAST_ACCELEROMETER"
-            
-            // Intent extras
-            const val EXTRA_SERVICE_ID = "service_id"
-            const val EXTRA_VEHICLE_ID = "vehicle_id"
-            const val EXTRA_X = "extra_x"
-            const val EXTRA_Y = "extra_y"
-            const val EXTRA_Z = "extra_z"
-            const val EXTRA_MAGNITUDE = "extra_magnitude"
-            const val EXTRA_TOTAL_MOVEMENT = "extra_total_movement"
-            const val EXTRA_IS_VEHICLE_MOVEMENT = "extra_is_vehicle_movement"
-            const val EXTRA_IS_MONITORING = "extra_is_monitoring"
-            const val EXTRA_DETECTION_MODE = "extra_detection_mode"
-            
-            // Service constants
-            const val STOP_FOREGROUND_REMOVE = 0
-        
-        fun startService(
-            context: Context,
-            serviceId: String,
-            vehicleId: String,
-        ) {
-            val intent =
-                Intent(context, AccelerometerService::class.java).apply {
-                    action = ACTION_START_MONITORING
-                    putExtra(EXTRA_SERVICE_ID, serviceId)
-                    putExtra(EXTRA_VEHICLE_ID, vehicleId)
-                }
-            // Use startForegroundService for Android O+ (required for foreground services)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
-        }
-        
-        fun stopService(context: Context) {
-            val intent = Intent(context, AccelerometerService::class.java).apply {
-                action = ACTION_STOP_MONITORING
-            }
-            context.startService(intent)
-        }
-    }
-    
+    @Inject
+    lateinit var serviceRepository: ServiceRepository
+
+    @Inject
+    lateinit var firebaseAuth: FirebaseAuth
+
     @Inject
     lateinit var remoteConfigRepository: com.mainlert.data.repositories.RemoteConfigRepository
-
-    @Inject
-    lateinit var vehicleRepository: com.mainlert.data.repositories.VehicleRepository
-
-    @Inject
-    lateinit var vehicleServiceMappingRepository: VehicleServiceMappingRepository
-
-    @Inject
-    lateinit var serviceRepository: com.mainlert.data.repositories.ServiceRepository
-
-    @Inject
-    lateinit var serviceVariantRepository: com.mainlert.data.repositories.ServiceVariantRepository
-
-    @Inject
-    lateinit var lockRepository: com.mainlert.data.repositories.LockRepository
 
     /** Sensor manager for accessing device sensors. */
     private lateinit var sensorManager: SensorManager
@@ -136,11 +64,6 @@ class AccelerometerService : Service(), SensorEventListener {
 
     /** Indicates if monitoring is currently active. */
     private var isMonitoring = false
-
-    // Detection mode flag (for boot detection)
-    private var isDetectionMode = false
-    private var detectionStartTime = 0L
-    private val detectionTimeout = 30000L // 30 seconds max detection
 
     // Movement detection thresholds (loaded from RemoteConfig at startup)
     private var crashThreshold: Float = 3.0f
@@ -162,7 +85,6 @@ class AccelerometerService : Service(), SensorEventListener {
     private var bufferMaxSize = 100
     private var currentServiceId: String? = null
     private var currentVehicleId: String? = null
-    private var currentMappingId: String? = null
     private var currentServiceMileageLimit: Float = 1000f // Default mileage limit
 
     // Service reading calculation - using gravity-compensated movement
@@ -184,270 +106,32 @@ class AccelerometerService : Service(), SensorEventListener {
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
 
-    // Simplified state management - use Firebase as single source of truth
-    private var isFirebaseDataLoaded = false
-    private var isMonitoringActive = false
-
-    // Retry constants
-    private val RETRY_DELAY_MS = 5000L
-    private var retryCount = 0
-    private val MAX_RETRY_ATTEMPTS = 3
-
-    // Service state enum for better state management
-    private var serviceState = ServiceState.IDLE
-    enum class ServiceState {
-        IDLE,
-        LOADING_FIREBASE_DATA,
-        MONITORING,
-        ERROR_NO_INTERNET,
-        ERROR_FIREBASE_FAILED
-    }
-
-    // Connectivity variables
-    private lateinit var connectivityManager: ConnectivityManager
-
-    // Connectivity receiver for automatic retry
-    private val connectivityReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ConnectivityManager.CONNECTIVITY_ACTION) {
-                if (hasInternetConnection()) {
-                    android.util.Log.i("AccelerometerService", "Internet connection restored, retrying Firebase loading...")
-                    retryCount = 0
-                    loadFirebaseData()
-                }
-            }
-        }
-    }
-
     override fun onCreate() {
         super.onCreate()
-        Log.d("ServiceDebug", ">>> onCreate() called")
-        
-        // FIXED: Initialize service state with proper synchronization
-        synchronized(this) {
-            serviceState = ServiceState.IDLE
-            Log.d("ServiceDebug", ">>> Service state initialized to IDLE")
-        }
-        
-        // Initialize sensors
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        
-        // Initialize connectivity manager
-        connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        
-        // Initialize notification channel
+        // Initialize sensors and notification channel for foreground service
+        initSensors()
         createNotificationChannel()
-        
-        // Start foreground service with initial notification
-        startForeground(1, createNotification())
-        
-        // Register connectivity receiver for automatic retry
-        registerReceiver(connectivityReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
-        
-        Log.d("ServiceDebug", ">>> onCreate() completed")
+        checkBatteryOptimization()
     }
 
     /**
-     * Checks if internet connection is available.
+     * Checks if battery optimization is enabled and notifies user if so.
      */
-    private fun hasInternetConnection(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-    }
-
-    /**
-     * Checks for active mapping in Firebase and restores service state on restart.
-     * This enables the service to automatically resume monitoring after app restart.
-     */
-    private suspend fun checkForActiveMappingAndRestore(): Boolean {
-        android.util.Log.d("AccelerometerService", "Checking for active mapping in Firebase...")
-        
-        return try {
-            val activeMappingResult = vehicleServiceMappingRepository.getActiveMapping()
-            
-            when (activeMappingResult) {
-                is com.mainlert.data.models.Result.Success -> {
-                    val activeMapping = activeMappingResult.data
-                    if (activeMapping != null && activeMapping.isMonitoring) {
-                        android.util.Log.i("AccelerometerService", "Found active mapping: vehicleId=${activeMapping.vehicleId}, serviceId=${activeMapping.serviceId}")
-                        
-                        // Restore service state from active mapping (but NOT totalMovement - start fresh)
-                        currentVehicleId = activeMapping.vehicleId
-                        currentServiceId = activeMapping.serviceId
-                        currentMappingId = activeMapping.id
-                        currentServiceMileageLimit = activeMapping.mileageLimit
-                        
-                        android.util.Log.i("AccelerometerService", "Restored service state from Firebase. Starting monitoring...")
-                        
-                        // Start Firebase data loading phase with restored state
-                        loadFirebaseData()
-                        true
-                    } else {
-                        android.util.Log.d("AccelerometerService", "No active mapping found or mapping not monitoring")
-                        false
-                    }
-                }
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.w("AccelerometerService", "Failed to check active mapping: ${activeMappingResult.message}")
-                    false
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Error checking for active mapping", e)
-            false
-        }
-    }
-
-    /**
-     * Handles retry logic for Firebase loading failures.
-     */
-    private fun handleRetry() {
-        if (retryCount < MAX_RETRY_ATTEMPTS) {
-            retryCount++
-            android.util.Log.w("AccelerometerService", "Retrying Firebase loading (attempt $retryCount)")
-            
-            // Schedule retry after delay
-            Handler(Looper.getMainLooper()).postDelayed({
-                loadFirebaseData()
-            }, RETRY_DELAY_MS * retryCount)
-        } else {
-            android.util.Log.e("AccelerometerService", "Max retry attempts reached. Service cannot start.")
-            showRetryNotification("Max retry attempts reached. Please check your internet connection and try again.")
-            
-            // Reset service state to IDLE when max retries reached
-            synchronized(this) {
-                serviceState = ServiceState.IDLE
+    private fun checkBatteryOptimization() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+        val packageName = packageName
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+                // TODO: Show notification or dialog to user to disable battery optimization for best results
             }
         }
     }
 
     /**
-     * Loads all required Firebase data before starting monitoring.
-     * Handles connectivity checks and retry logic with comprehensive logging.
+     * Fallback for long-running tasks using WorkManager (stub for future implementation).
      */
-    private fun loadFirebaseData() {
-        Log.d("ServiceDebug", ">>> loadFirebaseData() called, serviceState=$serviceState")
-        android.util.Log.d("AccelerometerService", "Starting Firebase data loading...")
-        
-        // Check internet connectivity first
-        if (!hasInternetConnection()) {
-            Log.d("ServiceDebug", ">>> No internet connection available")
-            android.util.Log.w("AccelerometerService", "No internet connection available - cannot load Firebase data")
-            showRetryNotification("No internet connection. Please enable internet and tap retry.")
-            serviceState = ServiceState.ERROR_NO_INTERNET
-            return
-        }
-        
-        // Reset retry count on successful connectivity
-        retryCount = 0
-        
-        // Load data synchronously to prevent race conditions
-        serviceScope.launch {
-            try {
-                Log.d("ServiceDebug", ">>> Loading RemoteConfig thresholds...")
-                android.util.Log.d("AccelerometerService", "Loading RemoteConfig thresholds...")
-                
-                // Load RemoteConfig thresholds with detailed logging
-                try {
-                    crashThreshold = remoteConfigRepository.getCrashThreshold()
-                    minThreshold = remoteConfigRepository.getMinThreshold()
-                    Log.d("ServiceDebug", ">>> Loaded thresholds: crashThreshold=$crashThreshold, minThreshold=$minThreshold")
-                    android.util.Log.d("AccelerometerService", "Successfully loaded RemoteConfig thresholds: crashThreshold=$crashThreshold, minThreshold=$minThreshold")
-                } catch (e: Exception) {
-                    android.util.Log.e("AccelerometerService", "Failed to load RemoteConfig thresholds", e)
-                    // Use default values if RemoteConfig fails
-                    crashThreshold = 3.0f
-                    minThreshold = 0.5f
-                    android.util.Log.w("AccelerometerService", "Using default thresholds due to RemoteConfig failure: crashThreshold=$crashThreshold, minThreshold=$minThreshold")
-                }
-                
-                // Load VehicleServiceMapping data with detailed logging
-                if (currentServiceId != null && currentVehicleId != null) {
-                    android.util.Log.d("AccelerometerService", "Loading VehicleServiceMapping for service $currentServiceId and vehicle $currentVehicleId")
-                    
-                    // FIX: If currentServiceId is blank but we have currentMappingId from active mapping restore,
-                    // restore the serviceId from the mapping to avoid creating duplicate mappings
-                    if ((currentServiceId.isNullOrBlank()) && currentMappingId != null) {
-                        android.util.Log.d("AccelerometerService", "currentServiceId is blank but currentMappingId is set - restoring serviceId from mapping")
-                        try {
-                            val mappingResult = vehicleServiceMappingRepository.getMappingById(currentMappingId!!)
-                            when (mappingResult) {
-                                is com.mainlert.data.models.Result.Success -> {
-                                    val mapping = mappingResult.data
-                                    if (mapping != null) {
-                                        currentServiceId = mapping.serviceId
-                                        android.util.Log.i("AccelerometerService", "Restored serviceId from mapping: $currentServiceId")
-                                    } else {
-                                        android.util.Log.e("AccelerometerService", "Mapping with ID $currentMappingId returned null - cannot restore serviceId")
-                                    }
-                                }
-                                is com.mainlert.data.models.Result.Failure -> {
-                                    android.util.Log.e("AccelerometerService", "Failed to load mapping for serviceId restore: ${mappingResult.message}")
-                                }
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("AccelerometerService", "Exception while loading mapping for serviceId restore", e)
-                        }
-                    }
-                    
-                    // Use unified mapping loading logic with distributed locking
-                    val mapping = loadOrCreateMapping()
-                    if (mapping != null) {
-                        startMonitoringWithMapping(mapping)
-                        return@launch
-                    } else {
-                        android.util.Log.e("AccelerometerService", "Failed to load or create mapping")
-                        // Continue to load vehicle mileage and start monitoring with defaults
-                    }
-                    
-                    // Load vehicle lifetime mileage and start monitoring
-                    loadVehicleMileageAndStartMonitoring()
-                }
-                
-            } catch (e: Exception) {
-                android.util.Log.e("AccelerometerService", "Firebase loading failed", e)
-                serviceState = ServiceState.ERROR_FIREBASE_FAILED
-                showRetryNotification("Failed to load service data: ${e.message}. Tap to retry.")
-                handleRetry()
-            }
-        }
-    }
-
-    /**
-     * Shows a retry notification when Firebase loading fails.
-     */
-    private fun showRetryNotification(errorMessage: String) {
-        val retryIntent = Intent(this, AccelerometerService::class.java).apply {
-            action = ACTION_RETRY_LOADING
-        }
-        
-        val retryPendingIntent = android.app.PendingIntent.getService(
-            this,
-            0,
-            retryIntent,
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification =
-            NotificationCompat.Builder(this, notificationChannelId)
-                .setContentTitle("MainLert")
-                .setContentText(errorMessage)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(retryPendingIntent)
-                .addAction(
-                    android.R.drawable.ic_menu_rotate,
-                    "Retry",
-                    retryPendingIntent
-                )
-                .setAutoCancel(false)
-                .build()
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(notificationId, notification)
+    private fun scheduleWorkManagerFallback() {
+        // TODO: Implement WorkManager fallback for background monitoring if service is killed
     }
 
     override fun onStartCommand(
@@ -456,69 +140,32 @@ class AccelerometerService : Service(), SensorEventListener {
         startId: Int,
     ): Int {
         android.util.Log.i("AccelerometerService", ">>> onStartCommand called with action: ${intent?.action}")
-        
-        // Process intent FIRST based on action type
         when (intent?.action) {
-            ACTION_STOP_MONITORING -> {
-                android.util.Log.i("AccelerometerService", "STOP_MONITORING received, stopping monitoring immediately")
-                stopMonitoring()
-                // After stopping, clear the active mapping state
-                // to prevent automatic restoration on next start
-                currentMappingId = null
-                currentServiceId = null
-                currentVehicleId = null
-                return START_STICKY
-            }
-            ACTION_RETRY_LOADING -> {
-                android.util.Log.i("AccelerometerService", "RETRY_LOADING received")
-                retryCount = 0
-                serviceState = ServiceState.LOADING_FIREBASE_DATA
-                loadFirebaseData()
-                return START_STICKY
-            }
-            // For START_MONITORING, continue with normal flow (including restoration check)
             ACTION_START_MONITORING -> {
-                // Only set serviceId/vehicleId from intent if they are provided (not blank)
-                val serviceIdExtra = intent.getStringExtra(EXTRA_SERVICE_ID)
-                val vehicleIdExtra = intent.getStringExtra(EXTRA_VEHICLE_ID)
-                
-                if (!serviceIdExtra.isNullOrBlank()) {
-                    currentServiceId = serviceIdExtra
-                }
-                if (!vehicleIdExtra.isNullOrBlank()) {
-                    currentVehicleId = vehicleIdExtra
-                }
-                
+                currentServiceId = intent.getStringExtra(EXTRA_SERVICE_ID)
+                currentVehicleId = intent.getStringExtra(EXTRA_VEHICLE_ID)
                 android.util.Log.i("AccelerometerService", "START_MONITORING received, serviceId: $currentServiceId, vehicleId: $currentVehicleId")
+
+                // Start monitoring IMMEDIATELY - don't wait for Firebase
+                startMonitoring()
+
+                // Load existing service data asynchronously (updates totalMovement while monitoring runs)
+                serviceScope.launch {
+                    currentServiceId?.let { serviceId ->
+                        val serviceResult = serviceRepository.getServiceById(serviceId)
+                        if (serviceResult is com.mainlert.data.models.Result.Success) {
+                            val service = serviceResult.data
+                            currentServiceMileageLimit = service?.mileageLimit ?: 1000f
+                            // Load existing totalMovement so we continue from where we left off
+                            // This ensures readings don't wait for local to catch up to Firebase value
+                            totalMovement = service?.totalMovement ?: 0f
+                            android.util.Log.d("AccelerometerService", "Mileage limit set to: $currentServiceMileageLimit, totalMovement loaded: $totalMovement")
+                        }
+                    }
+                }
             }
-            else -> {
-                android.util.Log.d("AccelerometerService", "Unknown or null action: ${intent?.action}")
-            }
+            ACTION_STOP_MONITORING -> stopMonitoring()
         }
-        
-        // Check for active mapping synchronously if we don't already have one
-        // This allows the service to restore state after a reboot or app restart
-        if (currentMappingId == null) {
-            android.util.Log.d("AccelerometerService", "No current mapping, performing synchronous restoration check...")
-            kotlinx.coroutines.runBlocking(Dispatchers.IO) {
-                checkForActiveMappingAndRestore()
-            }
-        }
-        
-        // If restoration found an active mapping, monitoring is already started/loading
-        // Skip further processing to avoid overwriting restored state
-        if (currentMappingId != null) {
-            android.util.Log.i("AccelerometerService", "Active mapping restored (currentMappingId=$currentMappingId), monitoring is active")
-            return START_STICKY
-        }
-        
-        // If we get here with a START_MONITORING action but no active mapping,
-        // we need to start the Firebase data loading phase
-        if (intent?.action == ACTION_START_MONITORING) {
-            serviceState = ServiceState.LOADING_FIREBASE_DATA
-            loadFirebaseData()
-        }
-        
         return START_STICKY
     }
 
@@ -526,75 +173,7 @@ class AccelerometerService : Service(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        
-        // If monitoring is active, we should save state, but we can't launch async operations in onDestroy
-        // The service is being destroyed (possibly due to system), so just clean up resources
-        if (isMonitoring) {
-            android.util.Log.w("AccelerometerService", "onDestroy() called while monitoring active - service will be destroyed without saving final state")
-            // Note: In production, the service should be stopped via stopMonitoring() before onDestroy()
-            // If the system kills the service while monitoring, we rely on Firebase real-time listeners
-            // in the DashboardViewModel to restore state when the app restarts
-        }
-        
-        // Stop sensor monitoring immediately
-        isMonitoring = false
-        isServiceActive = false
-        sensorManager.unregisterListener(this)
-        android.util.Log.d("AccelerometerService", "Sensor listeners unregistered in onDestroy()")
-        
-        // Cancel all coroutines
-        serviceScope.cancel("Service destroyed")
-        android.util.Log.d("AccelerometerService", "ServiceScope cancelled in onDestroy()")
-        
-        // Unregister connectivity receiver
-        try {
-            unregisterReceiver(connectivityReceiver)
-            android.util.Log.d("AccelerometerService", "Connectivity receiver unregistered in onDestroy()")
-        } catch (e: IllegalArgumentException) {
-            // Receiver was not registered
-            android.util.Log.d("AccelerometerService", "Connectivity receiver was not registered in onDestroy()")
-        }
-        
-        // Clear all state
-        currentMappingId = null
-        currentServiceId = null
-        currentVehicleId = null
-        currentServiceMileageLimit = 1000f
-        totalMovement = 0f
-        serviceState = ServiceState.IDLE
-        
-        android.util.Log.i("AccelerometerService", "onDestroy() completed - service fully cleaned up")
-    }
-
-    /**
-     * Creates a notification for the foreground service.
-     */
-    private fun createNotification(): android.app.Notification {
-        return NotificationCompat.Builder(this, notificationChannelId)
-            .setContentTitle("MainLert")
-            .setContentText("Accelerometer monitoring active")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
-
-    /**
-     * Starts monitoring accelerometer data.
-     * This method is called from onCreate() to initialize the accelerometer monitoring.
-     */
-    private fun startAccelerometerMonitoring() {
-        android.util.Log.d("AccelerometerService", "Starting accelerometer monitoring...")
-        
-        // Initialize sensors
-        initSensors()
-        
-        // Start monitoring if we have an active mapping
-        if (currentMappingId != null) {
-            android.util.Log.d("AccelerometerService", "Found active mapping, starting monitoring...")
-            startMonitoring()
-        } else {
-            android.util.Log.d("AccelerometerService", "No active mapping found, waiting for start command...")
-        }
+        stopMonitoring()
     }
 
     private fun initSensors() {
@@ -666,33 +245,10 @@ class AccelerometerService : Service(), SensorEventListener {
 
     private fun startMonitoring() {
         android.util.Log.i("AccelerometerService", ">>> startMonitoring() called")
-        
-        // FIXED: Add state validation before starting monitoring
-        synchronized(this) {
-            when (serviceState) {
-                ServiceState.IDLE -> {
-                    android.util.Log.w("AccelerometerService", "Cannot start monitoring from IDLE state - Firebase data not loaded yet")
-                    return
-                }
-                ServiceState.LOADING_FIREBASE_DATA -> {
-                    android.util.Log.w("AccelerometerService", "Cannot start monitoring while loading Firebase data")
-                    return
-                }
-                ServiceState.ERROR_NO_INTERNET, ServiceState.ERROR_FIREBASE_FAILED -> {
-                    android.util.Log.w("AccelerometerService", "Cannot start monitoring due to error state: $serviceState")
-                    return
-                }
-                ServiceState.MONITORING -> {
-                    if (isMonitoring) {
-                        android.util.Log.w("AccelerometerService", "Already monitoring, returning early")
-                        return
-                    }
-                }
-            }
+        if (isMonitoring) {
+            android.util.Log.w("AccelerometerService", "Already monitoring, returning early")
+            return
         }
-
-        // Set service state to monitoring
-        serviceState = ServiceState.MONITORING
 
         // Load thresholds from RemoteConfig
         crashThreshold = remoteConfigRepository.getCrashThreshold()
@@ -702,8 +258,8 @@ class AccelerometerService : Service(), SensorEventListener {
         isMonitoring = true
         isServiceActive = true
         readingStartTime = System.currentTimeMillis()
-        // Reset totalMovement to 0 for each monitoring session - do not persist
-        totalMovement = 0f
+        // Don't reset totalMovement to 0 - it will be loaded from Firebase asynchronously
+        // This ensures readings continue from where they left off when accelerometer restarts
         movementBuffer.clear()
         lastBroadcastTime = 0L
 
@@ -745,95 +301,41 @@ class AccelerometerService : Service(), SensorEventListener {
         } ?: run {
             android.util.Log.e("AccelerometerService", "NO ACCELEROMETER SENSOR FOUND on this device!")
         }
-        
-        // Log service state for debugging
-        android.util.Log.i("AccelerometerService", "Monitoring started: serviceId=$currentServiceId, vehicleId=$currentVehicleId, mappingId=$currentMappingId, totalMovement=$totalMovement")
     }
 
     private fun stopMonitoring() {
-        if (!isMonitoring) {
-            android.util.Log.d("AccelerometerService", "stopMonitoring() called but already stopped")
-            return
-        }
+        if (!isMonitoring) return
 
-        android.util.Log.i("AccelerometerService", "Stopping monitoring: serviceId=$currentServiceId, vehicleId=$currentVehicleId, mappingId=$currentMappingId, totalMovement=$totalMovement")
-
-        // Mark as not monitoring immediately to prevent further updates
         isMonitoring = false
         isServiceActive = false
-
-        // Unregister sensor listeners
         sensorManager.unregisterListener(this)
-        android.util.Log.d("AccelerometerService", "Sensor listeners unregistered")
-
-        // Stop foreground notification
         stopForeground(STOP_FOREGROUND_REMOVE)
-        android.util.Log.d("AccelerometerService", "Foreground notification removed")
 
-        // Save final service reading to VehicleServiceMapping and update vehicle mileage
-        // Do this BEFORE stopping the service to ensure data is saved
-        if (currentMappingId != null && totalMovement > 0) {
-            android.util.Log.d("AccelerometerService", "Saving final reading to Firebase: mappingId=$currentMappingId, totalMovement=$totalMovement")
-            
-            // Launch save operations on serviceScope (which is still active)
+        // Cancel all coroutines when stopping
+        serviceScope.cancel("Monitoring stopped")
+
+        // Save final service reading to Firebase
+        if (currentServiceId != null && totalMovement > 0) {
+            val userId = firebaseAuth.currentUser?.uid ?: ""
+            val reading =
+                ServiceReading(
+                    id = "",
+                    serviceId = currentServiceId!!,
+                    userId = userId,
+                    totalMovement = totalMovement,
+                    duration = System.currentTimeMillis() - readingStartTime,
+                    isVehicleMovement = isVehicleMovement,
+                    isCompleted = true,
+                    timestamp = System.currentTimeMillis(),
+                )
+
             serviceScope.launch {
-                try {
-                    // Save final reading to mapping
-                    val result = vehicleServiceMappingRepository.updateMappingMovement(currentMappingId!!, totalMovement)
-                    
-                    when (result) {
-                        is com.mainlert.data.models.Result.Success -> {
-                            android.util.Log.i("AccelerometerService", "Final reading saved to VehicleServiceMapping: mappingId=$currentMappingId, totalMovement=$totalMovement")
-                        }
-                        is com.mainlert.data.models.Result.Failure -> {
-                            android.util.Log.e("AccelerometerService", "Failed to save final reading: mappingId=$currentMappingId, error=${result.message}")
-                        }
-                    }
-
-                    // Update vehicle lifetime mileage - this accumulates forever and never resets
-                    currentVehicleId?.let { vehicleId ->
-                        val vehicleResult = vehicleRepository.getVehicleById(vehicleId)
-                        if (vehicleResult is com.mainlert.data.models.Result.Success) {
-                            val updateResult = vehicleRepository.updateVehicleLifetimeMileage(vehicleId, totalMovement)
-                            when (updateResult) {
-                                is com.mainlert.data.models.Result.Success -> {
-                                    android.util.Log.d("AccelerometerService", "Vehicle lifetime mileage updated: +$totalMovement")
-                                }
-                                is com.mainlert.data.models.Result.Failure -> {
-                                    android.util.Log.e("AccelerometerService", "Failed to update vehicle lifetime mileage: vehicleId=$vehicleId, error=${updateResult.message}")
-                                }
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AccelerometerService", "Exception during final save operations", e)
-                } finally {
-                    // After saving, clear state and stop the service
-                    android.util.Log.d("AccelerometerService", "Clearing service state and stopping service")
-                    currentMappingId = null
-                    currentServiceId = null
-                    currentVehicleId = null
-                    currentServiceMileageLimit = 1000f
-                    totalMovement = 0f
-                    serviceState = ServiceState.IDLE
-                    
-                    // Actually stop the service
-                    stopSelf()
-                    android.util.Log.i("AccelerometerService", "Service stopped successfully")
-                }
+                serviceRepository.addServiceReading(reading)
+                android.util.Log.d("AccelerometerService", "Final reading saved to Firebase: totalMovement=$totalMovement")
             }
-        } else {
-            // No final reading to save, just clear state and stop immediately
-            android.util.Log.d("AccelerometerService", "No final reading to save, stopping service immediately")
-            currentMappingId = null
-            currentServiceId = null
-            currentVehicleId = null
-            currentServiceMileageLimit = 1000f
-            totalMovement = 0f
-            serviceState = ServiceState.IDLE
-            stopSelf()
-            android.util.Log.i("AccelerometerService", "Service stopped successfully")
         }
+
+        android.util.Log.d("AccelerometerService", "Monitoring stopped")
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -845,12 +347,12 @@ class AccelerometerService : Service(), SensorEventListener {
                     SensorManager.getOrientation(rotationMatrix, orientationAngles)
                 }
                 Sensor.TYPE_ACCELEROMETER -> {
-                     // Skip if not monitoring and not in detection mode
-                     if (!isMonitoring && !isDetectionMode) return@let
+                    // Skip if not monitoring to prevent crashes
+                    if (!isMonitoring) return@let
 
-                     val accelX = sensorEvent.values[0]
-                     val accelY = sensorEvent.values[1]
-                     val accelZ = sensorEvent.values[2]
+                    val accelX = sensorEvent.values[0]
+                    val accelY = sensorEvent.values[1]
+                    val accelZ = sensorEvent.values[2]
 
                     val currentTime = System.currentTimeMillis()
 
@@ -866,7 +368,7 @@ class AccelerometerService : Service(), SensorEventListener {
                     val linearZ = accelZ - gravityZ
 
                     // Calculate magnitude of linear acceleration (true movement)
-                    val magnitude = sqrt(linearX * linearX + linearY * linearY + linearZ * linearZ).toFloat()
+                    val magnitude = sqrt(linearX * linearX + linearY * linearY + linearZ * linearZ)
 
                     // Process movement data SYNCHRONOUSLY (no coroutine)
                     processMovementData(linearX, linearY, linearZ, magnitude, currentTime)
@@ -910,31 +412,8 @@ class AccelerometerService : Service(), SensorEventListener {
             val avgMovement = movementBuffer.average().toFloat()
             isVehicleMovement = avgMovement > crashThreshold
 
-            // Handle detection mode
-            if (isDetectionMode) {
-                // Check if vehicle movement is detected
-                if (isVehicleMovement) {
-                    android.util.Log.i("AccelerometerService", "Vehicle movement detected in detection mode! Launching app...")
-                    
-                    // Launch the app to show vehicle selection dialog
-                    launchAppFromDetection()
-                    
-                    // Stop the service after launching app
-                    stopSelf()
-                    return
-                }
-                
-                // Check if detection timeout has been reached
-                if (currentTime - detectionStartTime > detectionTimeout) {
-                    android.util.Log.i("AccelerometerService", "Detection timeout reached without vehicle movement. Stopping service.")
-                    stopSelf()
-                    return
-                }
-            } else {
-                // Normal monitoring mode - update Firebase and check mileage
-                updateFirebaseMappingForSelectedService(currentMappingId, totalMovement)
-                checkForMileageLimit()
-            }
+            // Check for mileage limit condition
+            checkForMileageLimit()
         }
 
         // Broadcast accelerometer readings to UI every 500ms (throttled)
@@ -969,833 +448,79 @@ class AccelerometerService : Service(), SensorEventListener {
 
     /**
      * Checks if mileage limit reached and handles it.
-     * If serviceId is empty (monitoring all services), checks all services for mileage limits.
-     * Uses the service's stored mileage limit directly, eliminating runtime variant lookups.
      */
     private fun checkForMileageLimit() {
-        // If we have a specific service, check just that one
-        if (currentServiceId != null) {
-            // Use the service's stored mileage limit directly
-            val actualMileageLimit = currentServiceMileageLimit
-            
-            // Check if total movement has reached the mileage limit while in vehicle movement
-            if (isVehicleMovement && totalMovement >= actualMileageLimit) {
-                android.util.Log.i("AccelerometerService", "MILEAGE LIMIT REACHED! totalMovement=$totalMovement, limit=$actualMileageLimit (service limit for service $currentServiceId)")
+        // Check if total movement has reached the mileage limit while in vehicle movement
+        if (isVehicleMovement && totalMovement >= currentServiceMileageLimit) {
+            android.util.Log.i("AccelerometerService", "MILEAGE LIMIT REACHED! totalMovement=$totalMovement, limit=$currentServiceMileageLimit")
 
-                // Save reading to VehicleServiceMapping
-                if (currentMappingId != null) {
-                    serviceScope.launch {
-                        vehicleServiceMappingRepository.updateMappingMovement(currentMappingId!!, totalMovement)
-                        android.util.Log.d("AccelerometerService", "Mileage limit reading saved to VehicleServiceMapping")
-                    }
-                }
+            // Send final reading to Firebase
+            currentServiceId?.let { serviceId ->
+                val userId = firebaseAuth.currentUser?.uid ?: ""
+                val reading =
+                    ServiceReading(
+                        id = "",
+                        serviceId = serviceId,
+                        userId = userId,
+                        totalMovement = totalMovement,
+                        duration = System.currentTimeMillis() - readingStartTime,
+                        isVehicleMovement = isVehicleMovement,
+                        isCompleted = true,
+                        timestamp = System.currentTimeMillis(),
+                    )
 
-                // Show notification
-                showMileageNotification()
+                serviceScope.launch {
+                    serviceRepository.addServiceReading(reading)
+                    android.util.Log.d("AccelerometerService", "Mileage limit reading saved to Firebase")
+                }
+            }
 
-                // Stop monitoring
-                stopMonitoring()
-            }
-        } 
-        // If serviceId is empty, we're monitoring all services - check all mappings for mileage limits
-        else if (currentVehicleId != null) {
-            checkAllServicesForMileageLimit()
-        }
-    }
-    
-    /**
-     * Checks all services for the vehicle for mileage limits when monitoring all services.
-     */
-    private fun checkAllServicesForMileageLimit() {
-        serviceScope.launch {
-            try {
-                android.util.Log.d("AccelerometerService", "Checking mileage limits for all services on vehicle $currentVehicleId")
-                
-                // Get all mappings for this vehicle
-                val mappingsResult = vehicleServiceMappingRepository.getMappingsForVehicle(currentVehicleId!!)
-                
-                when (mappingsResult) {
-                    is com.mainlert.data.models.Result.Success -> {
-                        val mappings = mappingsResult.data ?: emptyList()
-                        
-                        if (mappings.isEmpty()) {
-                            android.util.Log.w("AccelerometerService", "No mappings found for vehicle $currentVehicleId")
-                            return@launch
-                        }
-                        
-                        var anyServiceReachedLimit = false
-                        
-                        // Check each mapping for mileage limit
-                        for (mapping in mappings) {
-                            try {
-                                // Get the actual variant mileage limit for this service
-                                val actualMileageLimit = getActualVariantMileageLimitForService(mapping.serviceId)
-                                
-                                // Check if this service has reached its limit
-                                if (isVehicleMovement && mapping.totalMovement >= actualMileageLimit) {
-                                    android.util.Log.i("AccelerometerService", "MILEAGE LIMIT REACHED for service ${mapping.serviceId}! totalMovement=${mapping.totalMovement}, limit=$actualMileageLimit")
-                                    anyServiceReachedLimit = true
-                                    
-                                    // Update this specific mapping
-                                    val updateResult = vehicleServiceMappingRepository.updateMappingMovement(mapping.id, mapping.totalMovement)
-                                    when (updateResult) {
-                                        is com.mainlert.data.models.Result.Success -> {
-                                            android.util.Log.d("AccelerometerService", "Mileage limit reading saved for service ${mapping.serviceId}")
-                                        }
-                                        is com.mainlert.data.models.Result.Failure -> {
-                                            android.util.Log.e("AccelerometerService", "Failed to save mileage limit reading for service ${mapping.serviceId}: ${updateResult.message}")
-                                        }
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                android.util.Log.e("AccelerometerService", "Exception checking mileage limit for service ${mapping.serviceId}: ${e.message}")
-                            }
-                        }
-                        
-                        // If any service reached the limit, show notification and stop monitoring
-                        if (anyServiceReachedLimit) {
-                            showMileageNotification()
-                            stopMonitoring()
-                        }
-                        
-                    }
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.e("AccelerometerService", "Failed to get mappings for vehicle $currentVehicleId: ${mappingsResult.message}")
-                    }
-                }
-                
-            } catch (e: Exception) {
-                android.util.Log.e("AccelerometerService", "Exception checking mileage limits for all services on vehicle $currentVehicleId", e)
-            }
-        }
-    }
-    
-    /**
-     * Gets the actual mileage limit from a specific service's assigned variant.
-     * Adds defensive checks for empty/invalid variant IDs to prevent Firebase errors.
-     */
-    private suspend fun getActualVariantMileageLimitForService(serviceId: String): Float {
-        return try {
-            // Get the service to find its variantId
-            val serviceResult = serviceRepository.getServiceById(serviceId)
-            
-            when (serviceResult) {
-                is com.mainlert.data.models.Result.Success -> {
-                    val service = serviceResult.data
-                    if (service?.variantId != null && service.variantId.isNotEmpty()) {
-                        // Defensive check: only call getVariantById if variantId is valid
-                        try {
-                            // Look up the variant to get its actual mileage limit
-                            val variantResult = serviceVariantRepository.getVariantById(service.variantId)
-                            
-                            when (variantResult) {
-                                is com.mainlert.data.models.Result.Success -> {
-                                    val variant = variantResult.data
-                                    if (variant != null) {
-                                        android.util.Log.d("AccelerometerService", "Using variant mileage limit: ${variant.mileageLimit} for service $serviceId")
-                                        return variant.mileageLimit
-                                    }
-                                }
-                                is com.mainlert.data.models.Result.Failure -> {
-                                    android.util.Log.w("AccelerometerService", "Failed to get variant for service $serviceId: ${variantResult.message}")
-                                }
-                            }
-                        } catch (e: Exception) {
-                            android.util.Log.e("AccelerometerService", "Exception during variant lookup for service $serviceId: ${e.message}")
-                        }
-                    } else {
-                        android.util.Log.d("AccelerometerService", "Service $serviceId has empty or null variantId, using service's default mileage limit: ${service?.mileageLimit}")
-                    }
-                }
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.w("AccelerometerService", "Failed to get service $serviceId: ${serviceResult.message}")
-                }
-            }
-            
-            // Fallback to service's default mileage limit or 1000f
-            val fallbackLimit = try {
-                val serviceResult = serviceRepository.getServiceById(serviceId)
-                when (serviceResult) {
-                    is com.mainlert.data.models.Result.Success -> serviceResult.data?.mileageLimit ?: 1000f
-                    else -> 1000f
-                }
-            } catch (e: Exception) {
-                1000f
-            }
-            
-            android.util.Log.d("AccelerometerService", "Using fallback mileage limit: $fallbackLimit for service $serviceId")
-            fallbackLimit
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Error getting variant mileage limit for service $serviceId", e)
-            // Fallback to default limit on exception
-            android.util.Log.d("AccelerometerService", "Using fallback mileage limit: 1000f for service $serviceId")
-            1000f
+            // Show notification
+            showMileageNotification()
+
+            // Stop monitoring
+            stopMonitoring()
         }
     }
 
+    companion object {
+        const val ACTION_START_MONITORING = "com.mainlert.mainlertapp.START_MONITORING"
+        const val ACTION_STOP_MONITORING = "com.mainlert.mainlertapp.STOP_MONITORING"
+        const val ACTION_BROADCAST_ACCELEROMETER = "com.mainlert.mainlertapp.BROADCAST_ACCELEROMETER"
+        const val EXTRA_SERVICE_ID = "service_id"
+        const val EXTRA_VEHICLE_ID = "vehicle_id"
+        const val EXTRA_X = "extra_x"
+        const val EXTRA_Y = "extra_y"
+        const val EXTRA_Z = "extra_z"
+        const val EXTRA_MAGNITUDE = "extra_magnitude"
+        const val EXTRA_TOTAL_MOVEMENT = "extra_total_movement"
+        const val EXTRA_IS_VEHICLE_MOVEMENT = "extra_is_vehicle_movement"
+        const val EXTRA_IS_MONITORING = "extra_is_monitoring"
 
-    /**
-     * Gets the actual mileage limit from the service's assigned variant.
-     * Falls back to the mapping's stored limit if variant lookup fails.
-     */
-    private fun getActualVariantMileageLimit(): Float {
-        return try {
-            // Get the current service to find its variantId
-            if (currentServiceId != null) {
-                // Use runBlocking to call suspend function synchronously
-                val serviceResult = kotlinx.coroutines.runBlocking {
-                    serviceRepository.getServiceById(currentServiceId!!)
+        fun startService(
+            context: Context,
+            serviceId: String,
+            vehicleId: String,
+        ) {
+            val intent =
+                Intent(context, AccelerometerService::class.java).apply {
+                    action = ACTION_START_MONITORING
+                    putExtra(EXTRA_SERVICE_ID, serviceId)
+                    putExtra(EXTRA_VEHICLE_ID, vehicleId)
                 }
-                
-                when (serviceResult) {
-                    is com.mainlert.data.models.Result.Success -> {
-                        val service = serviceResult.data
-                        if (service?.variantId != null) {
-                            // Look up the variant to get its actual mileage limit
-                            val variantResult = kotlinx.coroutines.runBlocking {
-                                serviceVariantRepository.getVariantById(service.variantId!!)
-                            }
-                            
-                            when (variantResult) {
-                                is com.mainlert.data.models.Result.Success -> {
-                                    val variant = variantResult.data
-                                    if (variant != null) {
-                                        android.util.Log.d("AccelerometerService", "Using variant mileage limit: ${variant.mileageLimit} for service $currentServiceId")
-                                        return variant.mileageLimit
-                                    }
-                                }
-                                is com.mainlert.data.models.Result.Failure -> {
-                                    android.util.Log.w("AccelerometerService", "Failed to get variant: ${variantResult.message}")
-                                }
-                            }
-                        }
-                    }
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.w("AccelerometerService", "Failed to get service: ${serviceResult.message}")
-                    }
-                }
-            }
-            
-            // Fallback to the mapping's stored limit
-            android.util.Log.d("AccelerometerService", "Using fallback mileage limit: $currentServiceMileageLimit")
-            currentServiceMileageLimit
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Error getting variant mileage limit", e)
-            // Fallback to the mapping's stored limit on exception
-            android.util.Log.d("AccelerometerService", "Using fallback mileage limit: $currentServiceMileageLimit")
-            currentServiceMileageLimit
-        }
-    }
-
-    /**
-     * Updates the Firebase VehicleServiceMapping with the latest totalMovement for the selected vehicle service.
-     * If serviceId is empty (monitoring all services), updates all mappings for the vehicle.
-     * This ensures service readings are updated in real-time via VehicleServiceMapping.
-     */
-    private fun updateFirebaseMappingForSelectedService(mappingId: String?, totalMovement: Float) {
-        // Only update Firebase when vehicle is actually moving (not human movement)
-        if (!isVehicleMovement) {
-            android.util.Log.d("AccelerometerService", "Not vehicle movement - skipping Firebase update")
-            return
-        }
-        
-        // If we have a specific mapping ID, update just that one
-        if (mappingId != null) {
-            updateSingleMapping(mappingId, totalMovement)
-            return
-        }
-        
-        // If serviceId is empty, we're monitoring all services - update all mappings for the vehicle
-        if (currentServiceId.isNullOrEmpty() && currentVehicleId != null) {
-            updateAllMappingsForVehicle(currentVehicleId!!, totalMovement)
-        } else {
-            android.util.Log.d("AccelerometerService", "No mapping ID and no vehicle ID - skipping Firebase update")
-        }
-    }
-    
-    /**
-     * Updates a single VehicleServiceMapping.
-     */
-    private fun updateSingleMapping(mappingId: String, totalMovement: Float) {
-        serviceScope.launch {
-            try {
-                android.util.Log.d("AccelerometerService", "Attempting Firebase update: mappingId=$mappingId, totalMovement=$totalMovement")
-                val result = vehicleServiceMappingRepository.updateMappingMovement(mappingId, totalMovement)
-                
-                when (result) {
-                    is com.mainlert.data.models.Result.Success -> {
-                        android.util.Log.i("AccelerometerService", "Firebase mapping updated successfully: mappingId=$mappingId, totalMovement=$totalMovement")
-                    }
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.e("AccelerometerService", "Firebase update failed: mappingId=$mappingId, error=${result.message}")
-                        // Show a notification to alert the user about the Firebase sync issue
-                        showFirebaseSyncErrorNotification(result.message ?: "Failed to sync readings to cloud")
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("AccelerometerService", "Exception during Firebase update: mappingId=$mappingId", e)
-                showFirebaseSyncErrorNotification("Network error: ${e.message}")
-            }
-        }
-    }
-    
-    /**
-     * Updates all VehicleServiceMappings for the vehicle when monitoring all services.
-     */
-    private fun updateAllMappingsForVehicle(vehicleId: String, totalMovement: Float) {
-        serviceScope.launch {
-            try {
-                android.util.Log.d("AccelerometerService", "Attempting Firebase update for all mappings on vehicle $vehicleId, totalMovement=$totalMovement")
-                
-                // Get all mappings for this vehicle
-                val mappingsResult = vehicleServiceMappingRepository.getMappingsForVehicle(vehicleId)
-                
-                when (mappingsResult) {
-                    is com.mainlert.data.models.Result.Success -> {
-                        val mappings = mappingsResult.data ?: emptyList()
-                        
-                        if (mappings.isEmpty()) {
-                            android.util.Log.w("AccelerometerService", "No mappings found for vehicle $vehicleId")
-                            return@launch
-                        }
-                        
-                        var updatesSuccessful = 0
-                        var updatesFailed = 0
-                        
-                        // Update all mappings for this vehicle
-                        for (mapping in mappings) {
-                            try {
-                                val result = vehicleServiceMappingRepository.updateMappingMovement(mapping.id, totalMovement)
-                                
-                                when (result) {
-                                    is com.mainlert.data.models.Result.Success -> {
-                                        updatesSuccessful++
-                                        android.util.Log.d("AccelerometerService", "Updated mapping ${mapping.id} for service ${mapping.serviceId}: $totalMovement")
-                                    }
-                                    is com.mainlert.data.models.Result.Failure -> {
-                                        updatesFailed++
-                                        android.util.Log.e("AccelerometerService", "Failed to update mapping ${mapping.id} for service ${mapping.serviceId}: ${result.message}")
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                updatesFailed++
-                                android.util.Log.e("AccelerometerService", "Exception updating mapping ${mapping.id} for service ${mapping.serviceId}: ${e.message}")
-                            }
-                        }
-                        
-                        android.util.Log.i("AccelerometerService", "Batch update completed: $updatesSuccessful successful, $updatesFailed failed out of ${mappings.size} mappings")
-                        
-                        if (updatesFailed > 0) {
-                            showFirebaseSyncErrorNotification("Failed to sync some readings to cloud: $updatesFailed/${mappings.size} updates failed")
-                        }
-                        
-                    }
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.e("AccelerometerService", "Failed to get mappings for vehicle $vehicleId: ${mappingsResult.message}")
-                        showFirebaseSyncErrorNotification("Failed to sync readings: ${mappingsResult.message}")
-                    }
-                }
-                
-            } catch (e: Exception) {
-                android.util.Log.e("AccelerometerService", "Exception during batch Firebase update for vehicle $vehicleId", e)
-                showFirebaseSyncErrorNotification("Network error: ${e.message}")
-            }
-        }
-    }
-
-    // ========== Refactored Mapping Loading Functions ==========
-    
-    /**
-     * Unified function to load an existing mapping or create a new one.
-     * Uses distributed locking to prevent duplicate creation.
-     */
-    private suspend fun loadOrCreateMapping(): VehicleServiceMapping? {
-        val vehicleId = currentVehicleId
-        val serviceId = currentServiceId
-        
-        if (vehicleId.isNullOrBlank() || serviceId.isNullOrBlank()) {
-            Log.w(TAG, "Cannot load/create mapping - vehicleId or serviceId is null/blank")
-            return null
-        }
-        
-        return try {
-            // Try to load existing mapping first
-            val existingMapping = loadExistingMapping(vehicleId, serviceId)
-            if (existingMapping != null) {
-                android.util.Log.i(TAG, "Found existing mapping: ${existingMapping.id}")
-                return existingMapping
-            }
-            
-            // No mapping found - acquire lock and create
-            createMappingWithLock(vehicleId, serviceId)
-            
-        } catch (e: Exception) {
-            android.util.Log.e(TAG, "Failed to load or create mapping", e)
-            null
-        }
-    }
-    
-    /**
-     * Loads existing mapping using the best available query method.
-     * Returns null if no mapping found.
-     */
-    private suspend fun loadExistingMapping(vehicleId: String, serviceId: String): VehicleServiceMapping? {
-        // If we have a currentMappingId from active mapping restore, use it directly
-        if (currentMappingId != null) {
-            android.util.Log.d(TAG, "Using currentMappingId from restore: $currentMappingId")
-            val result = vehicleServiceMappingRepository.getMappingById(currentMappingId!!)
-            if (result is com.mainlert.data.models.Result.Success) {
-                return result.data
-            }
-            // If loading by ID fails, clear the ID and fall back to query
-            currentMappingId = null
-        }
-        
-        // Query by vehicle+service
-        val result = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)
-        return when (result) {
-            is com.mainlert.data.models.Result.Success -> {
-                val mapping = result.data
-                if (mapping != null) {
-                    currentMappingId = mapping.id
-                    currentServiceMileageLimit = mapping.mileageLimit
-                    // Do NOT restore totalMovement from mapping - start fresh each session
-                }
-                mapping
-            }
-            is com.mainlert.data.models.Result.Failure -> {
-                android.util.Log.e(TAG, "Failed to load mapping: ${result.message}")
-                null
-            }
-        }
-    }
-    
-    /**
-     * Creates a new mapping with distributed locking to prevent duplicates.
-     * Uses Firestore transaction to ensure only one process creates the mapping.
-     */
-    private suspend fun createMappingWithLock(vehicleId: String, serviceId: String): VehicleServiceMapping? {
-        val lockDocId = "mapping_lock_${vehicleId}_$serviceId"
-        val mappingCreated = AtomicBoolean(false)
-        var createdMapping: VehicleServiceMapping? = null
-        var startTime = System.currentTimeMillis()
-        
-        try {
-            // Try to acquire lock (max 5 second wait)
-            startTime = System.currentTimeMillis()
-            while (System.currentTimeMillis() - startTime < 5000) {
-                try {
-                    val lockAcquired = lockRepository.acquireLock(lockDocId)
-                    if (lockAcquired is com.mainlert.data.models.Result.Success && lockAcquired.data == true) {
-                        // Lock acquired successfully
-                        break
-                    } else {
-                        // Lock already held by another process, wait and retry
-                        delay(500)
-                    }
-                } catch (e: Exception) {
-                    // Wait and retry
-                    delay(500)
-                }
-            }
-            
-            // Double-check if mapping was created while we were waiting for lock
-            val doubleCheck = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)
-            if (doubleCheck is com.mainlert.data.models.Result.Success && doubleCheck.data != null) {
-                Log.i(TAG, "Mapping already created by another process: ${doubleCheck.data.id}")
-                return doubleCheck.data
-            }
-            
-            // Create the mapping
-            android.util.Log.i(TAG, "Lock acquired, creating mapping for vehicle $vehicleId and service $serviceId")
-            val vehicleResult = vehicleRepository.getVehicleById(vehicleId)
-            val vehicle = when (vehicleResult) {
-                is com.mainlert.data.models.Result.Success -> vehicleResult.data
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.e(TAG, "Failed to get vehicle: ${vehicleResult.message}")
-                    null
-                }
-            }
-            
-            if (vehicle == null) {
-                android.util.Log.e(TAG, "Cannot create mapping - vehicle not found: $vehicleId")
-                return null
-            }
-            
-            val serviceResult = serviceRepository.getServiceById(serviceId)
-            val service = when (serviceResult) {
-                is com.mainlert.data.models.Result.Success -> serviceResult.data
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.e(TAG, "Failed to get service: ${serviceResult.message}")
-                    null
-                }
-            }
-            
-            if (service == null) {
-                android.util.Log.e(TAG, "Cannot create mapping - service not found: $serviceId")
-                return null
-            }
-            
-            createdMapping = createMappingForService(vehicle, service)
-            mappingCreated.set(true)
-            
-            return createdMapping
-            
-        } finally {
-            // Always release lock if we acquired it
-            if (mappingCreated.get() || System.currentTimeMillis() - startTime >= 5000) {
-                try {
-                    lockRepository.releaseLock(lockDocId)
-                    android.util.Log.d(TAG, "Released mapping lock: $lockDocId")
-                } catch (e: Exception) {
-                    android.util.Log.w(TAG, "Failed to release lock: $lockDocId", e)
-                }
-            }
-        }
-    }
-    
-    /**
-     * Starts monitoring with the loaded or newly created mapping.
-     */
-    private suspend fun startMonitoringWithMapping(mapping: VehicleServiceMapping) {
-        currentMappingId = mapping.id
-        currentServiceMileageLimit = mapping.mileageLimit
-        // Do NOT restore totalMovement from mapping - start fresh each session
-        
-        if (!mapping.isMonitoring) {
-            android.util.Log.d(TAG, "Mapping found but not monitoring, starting monitoring for mapping ${mapping.id}")
-            val startResult = vehicleServiceMappingRepository.startMappingMonitoring(mapping.id)
-            when (startResult) {
-                is com.mainlert.data.models.Result.Success -> {
-                    android.util.Log.i(TAG, "Successfully started monitoring for existing mapping ${mapping.id}")
-                }
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.e(TAG, "Failed to start monitoring for existing mapping ${mapping.id}: ${startResult.message}")
-                }
-            }
-        }
-        
-        // Continue with vehicle mileage loading and monitoring start
-        loadVehicleMileageAndStartMonitoring()
-    }
-    
-    /**
-     * Loads vehicle lifetime mileage and starts monitoring.
-     */
-    private suspend fun loadVehicleMileageAndStartMonitoring() {
-        if (currentVehicleId != null) {
-            try {
-                val vehicleResult = vehicleRepository.getVehicleById(currentVehicleId!!)
-                when (vehicleResult) {
-                    is com.mainlert.data.models.Result.Success -> {
-                        val vehicle = vehicleResult.data
-                        if (vehicle != null) {
-                            android.util.Log.d(TAG, "Successfully loaded vehicle lifetime mileage: ${vehicle.lifetimeMileage}")
-                        } else {
-                            android.util.Log.w(TAG, "Vehicle not found for ID: $currentVehicleId")
-                        }
-                    }
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.e(TAG, "Failed to load vehicle: ${vehicleResult.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e(TAG, "Exception while loading vehicle data", e)
-            }
-        }
-        
-        // All data loaded successfully - start monitoring
-        android.util.Log.i(TAG, "Firebase data loaded successfully. Starting monitoring...")
-        isFirebaseDataLoaded = true
-        serviceState = ServiceState.MONITORING
-        startMonitoring()
-    }
-    
-    /**
-     * Creates new VehicleServiceMappings when no active mapping is found and starts monitoring.
-     * If serviceId is empty, fetches all services for the vehicle and creates mappings for all of them.
-     * This ensures the service can always start monitoring by creating the necessary mappings.
-     */
-    private fun createNewMappingAndStartMonitoring() {
-        android.util.Log.i("AccelerometerService", "Creating new mapping for service $currentServiceId and vehicle $currentVehicleId")
-        
-        serviceScope.launch {
-            try {
-                // Get vehicle info for userId
-                val vehicleResult = vehicleRepository.getVehicleById(currentVehicleId!!)
-                val vehicle = when (vehicleResult) {
-                    is com.mainlert.data.models.Result.Success -> vehicleResult.data
-                    is com.mainlert.data.models.Result.Failure -> {
-                        android.util.Log.e("AccelerometerService", "Failed to get vehicle: ${vehicleResult.message}")
-                        null
-                    }
-                }
-                
-                if (vehicle == null) {
-                    android.util.Log.e("AccelerometerService", "Cannot create mapping - vehicle not found: $currentVehicleId")
-                    return@launch
-                }
-                
-                // Check if serviceId is empty - if so, fetch all services for the vehicle
-                if (currentServiceId.isNullOrEmpty()) {
-                    android.util.Log.i("AccelerometerService", "ServiceId is empty, fetching all services for vehicle $currentVehicleId")
-                    createMappingsForAllServices(vehicle)
-                } else {
-                    // Single service mapping creation (existing logic)
-                    createMappingForSingleService(vehicle)
-                }
-                
-            } catch (e: Exception) {
-                android.util.Log.e("AccelerometerService", "Exception while creating new mapping", e)
-                
-                // If permission denied, halt service startup
-                if (e is com.mainlert.data.models.PermissionDeniedException) {
-                    android.util.Log.e("AccelerometerService", "PERMISSION DENIED: Cannot start service due to Firebase permission issues")
-                    showPermissionDeniedNotification(e.message ?: "Permission denied: Cannot create vehicle service mappings")
-                    serviceState = ServiceState.ERROR_FIREBASE_FAILED
-                    return@launch
-                }
-                
-                // Fallback to starting monitoring with default values
-                android.util.Log.w("AccelerometerService", "Exception during mapping creation, starting with default values")
-                currentMappingId = null
-                currentServiceMileageLimit = 1000f
-                totalMovement = 0f
-                startMonitoring()
-            }
-        }
-    }
-    
-    /**
-     * Creates mappings for all services for the vehicle when serviceId is empty.
-     * Throws PermissionDeniedException if permission denied to prevent monitoring startup.
-     */
-    private suspend fun createMappingsForAllServices(vehicle: com.mainlert.data.models.Vehicle) {
-        try {
-            // Get all services
-            val serviceResult = serviceRepository.getServices()
-            val services = when (serviceResult) {
-                is com.mainlert.data.models.Result.Success -> serviceResult.data ?: emptyList()
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.e("AccelerometerService", "Failed to get services: ${serviceResult.message}")
-                    emptyList()
-                }
-            }
-            
-            if (services.isEmpty()) {
-                android.util.Log.w("AccelerometerService", "No services found for vehicle $currentVehicleId, cannot start monitoring")
-                throw com.mainlert.data.models.PermissionDeniedException("Cannot start monitoring - no services available")
-            }
-            
-            android.util.Log.i("AccelerometerService", "Found ${services.size} services for vehicle $currentVehicleId, creating mappings for all")
-            
-            var mappingsCreated = 0
-            var firstMappingId: String? = null
-            var firstMileageLimit = 1000f
-            
-            // Create mappings for all services
-            for (service in services) {
-                try {
-                    val mapping = createMappingForService(vehicle, service)
-                    if (mapping != null) {
-                        mappingsCreated++
-                        if (firstMappingId == null) {
-                            firstMappingId = mapping.id
-                            firstMileageLimit = mapping.mileageLimit
-                        }
-                        android.util.Log.d("AccelerometerService", "Created mapping for service ${service.id}: ${service.name}")
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.e("AccelerometerService", "Failed to create mapping for service ${service.id}: ${e.message}")
-                    
-                    // Re-throw permission denied exceptions to halt service startup
-                    if (e is com.mainlert.data.models.PermissionDeniedException) {
-                        throw e
-                    }
-                }
-            }
-            
-            if (mappingsCreated > 0) {
-                android.util.Log.i("AccelerometerService", "Successfully created $mappingsCreated mappings for vehicle $currentVehicleId")
-                currentMappingId = firstMappingId
-                currentServiceMileageLimit = firstMileageLimit
-                totalMovement = 0f
-                // startMonitoring() will be called from loadFirebaseData() after all data is loaded
+            // Use startForegroundService for Android O+ (required for foreground services)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
             } else {
-                android.util.Log.e("AccelerometerService", "PERMISSION DENIED: Failed to create any mappings for vehicle $currentVehicleId")
-                throw com.mainlert.data.models.PermissionDeniedException("Permission denied: Cannot create vehicle service mappings")
-            }
-            
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Exception while creating mappings for all services", e)
-            
-            // Re-throw permission denied exceptions
-            if (e is com.mainlert.data.models.PermissionDeniedException) {
-                throw e
-            }
-            
-            // For other exceptions, still halt service startup to prevent inconsistent state
-            throw com.mainlert.data.models.PermissionDeniedException("Failed to create mappings: ${e.message}")
-        }
-    }
-    
-    /**
-     * Creates a mapping for a single service (existing logic).
-     */
-    private suspend fun createMappingForSingleService(vehicle: com.mainlert.data.models.Vehicle) {
-        // Get service info and variant details
-        val serviceResult = serviceRepository.getServiceById(currentServiceId!!)
-        val service = when (serviceResult) {
-            is com.mainlert.data.models.Result.Success -> serviceResult.data
-            is com.mainlert.data.models.Result.Failure -> {
-                android.util.Log.e("AccelerometerService", "Failed to get service: ${serviceResult.message}")
-                null
+                context.startService(intent)
             }
         }
-        
-        if (service == null) {
-            android.util.Log.e("AccelerometerService", "Cannot create mapping - service not found: $currentServiceId")
-            return
-        }
-        
-        val mapping = createMappingForService(vehicle, service)
-        if (mapping != null) {
-            currentMappingId = mapping.id
-            currentServiceMileageLimit = mapping.mileageLimit
-            totalMovement = 0f  // Start fresh, don't persist totalMovement
-            
-            android.util.Log.i("AccelerometerService", "Successfully created new mapping: id=${mapping.id}, vehicleId=${mapping.vehicleId}, serviceId=${mapping.serviceId}")
-            // startMonitoring() will be called from loadFirebaseData() after all data is loaded
-        } else {
-            android.util.Log.e("AccelerometerService", "Failed to create mapping for service $currentServiceId")
-            currentMappingId = null
-            currentServiceMileageLimit = 1000f
-            totalMovement = 0f
-            // startMonitoring() will be called from loadFirebaseData() after all data is loaded
-        }
-    }
-    
-    /**
-     * Creates a single VehicleServiceMapping for a service-vehicle pair.
-     * Uses the service's stored mileage limit directly, eliminating runtime variant lookups.
-     */
-    private suspend fun createMappingForService(
-        vehicle: com.mainlert.data.models.Vehicle,
-        service: com.mainlert.data.models.Service
-    ): com.mainlert.data.models.VehicleServiceMapping? {
-        try {
-            // Use service's stored values directly - no runtime variant lookups
-            val variantName = service.variantName
-            val variantId = service.variantId
-            val mileageLimit = service.mileageLimit
-            
-            // Log the values being used
-            android.util.Log.d("AccelerometerService", "Creating mapping for service ${service.id}: variantId=$variantId, variantName=$variantName, mileageLimit=$mileageLimit")
-            
-            // Create new VehicleServiceMapping using service's stored values
-            val newMapping = com.mainlert.data.models.VehicleServiceMapping(
-                vehicleId = vehicle.id,
-                serviceId = service.id,
-                userId = vehicle.userId,
-                serviceName = variantName.ifEmpty { service.name },
-                variantId = variantId,
-                variantName = variantName,
-                totalMovement = 0f,
-                isMonitoring = true,
-                status = com.mainlert.data.models.VehicleServiceMapping.MappingStatus.ACTIVE,
-                lastReadingTime = System.currentTimeMillis(),
-                mileageLimit = mileageLimit,
-            )
-            
-            // Create the mapping in Firebase
-            val createResult = vehicleServiceMappingRepository.createMapping(newMapping)
-            when (createResult) {
-                is com.mainlert.data.models.Result.Success -> {
-                    val createdMapping = createResult.data
-                    if (createdMapping != null) {
-                        android.util.Log.i("AccelerometerService", "Successfully created mapping for service ${service.id}: id=${createdMapping.id}, variantId=$variantId, variantName=$variantName, mileageLimit=$mileageLimit")
-                        return createdMapping
-                    } else {
-                        android.util.Log.e("AccelerometerService", "Failed to create mapping for service ${service.id} - no data returned")
-                        return null
-                    }
-                }
-                is com.mainlert.data.models.Result.Failure -> {
-                    android.util.Log.e("AccelerometerService", "Failed to create mapping for service ${service.id}: ${createResult.message}")
-                    
-                    // Check if this is a permission denied error
-                    if (createResult.message?.contains("Permission denied", ignoreCase = true) == true) {
-                        android.util.Log.e("AccelerometerService", "PERMISSION DENIED: Cannot create VehicleServiceMapping. Halting service startup.")
-                        throw com.mainlert.data.models.PermissionDeniedException("Permission denied: Cannot create vehicle service mapping")
-                    }
-                    return null
-                }
-            }
-            
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Exception while creating mapping for service ${service.id}", e)
-            
-            // Re-throw permission denied exceptions to halt service startup
-            if (e is com.mainlert.data.models.PermissionDeniedException) {
-                throw e
-            }
-            return null
-        }
-    }
 
-    /**
-     * Shows a notification when Firebase sync fails.
-     */
-    private fun showFirebaseSyncErrorNotification(errorMessage: String) {
-        val notification =
-            NotificationCompat.Builder(this, notificationChannelId)
-                .setContentTitle("Sync Error")
-                .setContentText(errorMessage)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setVibrate(longArrayOf(0, 500, 250, 500))
-                .setLights(android.graphics.Color.RED, 3000, 3000)
-                .build()
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(notificationId + 1, notification)
-    }
-
-    /**
-     * Shows a notification when Firebase permission denied errors occur.
-     */
-    private fun showPermissionDeniedNotification(errorMessage: String) {
-        val notification =
-            NotificationCompat.Builder(this, notificationChannelId)
-                .setContentTitle("Permission Denied")
-                .setContentText(errorMessage)
-                .setSmallIcon(android.R.drawable.ic_lock_lock)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true)
-                .setVibrate(longArrayOf(0, 500, 250, 500, 250, 500))
-                .setLights(android.graphics.Color.RED, 3000, 3000)
-                .build()
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(notificationId + 2, notification)
-    }
-
-    /**
-     * Launches the app from boot detection mode when vehicle movement is detected.
-     * This is called when the service is in detection mode and vehicle movement is confirmed.
-     */
-    private fun launchAppFromDetection() {
-        try {
-            val launchIntent = Intent(this, com.mainlert.ui.MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(BootReceiver.EXTRA_SHOW_VEHICLE_SELECTION, true)
-                putExtra(BootReceiver.EXTRA_FROM_BOOT_DETECTION, true)
+        fun stopService(context: Context) {
+            val intent = Intent(context, AccelerometerService::class.java).apply {
+                action = ACTION_STOP_MONITORING
             }
-            startActivity(launchIntent)
-            android.util.Log.i("AccelerometerService", "Launched MainActivity from detection mode")
-        } catch (e: Exception) {
-            android.util.Log.e("AccelerometerService", "Failed to launch app from detection", e)
+            context.startService(intent)
         }
     }
-   }
+}

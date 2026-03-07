@@ -7,32 +7,30 @@ import android.content.IntentFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.mainlert.data.local.sync.SyncManager
 import com.mainlert.data.models.Result
 import com.mainlert.data.models.Service
+import com.mainlert.data.models.ServiceReading
+import com.mainlert.data.models.ServiceStatusSummary
 import com.mainlert.data.models.ServiceVariant
 import com.mainlert.data.models.User
 import com.mainlert.data.models.Vehicle
-import com.mainlert.data.models.VehicleServiceMapping
 import com.mainlert.data.repositories.AuthRepository
 import com.mainlert.data.repositories.ServiceRepository
 import com.mainlert.data.repositories.ServiceVariantRepository
 import com.mainlert.data.repositories.VehicleRepository
-import com.mainlert.data.repositories.VehicleServiceMappingRepository
 import com.mainlert.services.AccelerometerService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android.util.Log
-
 
 /**
  * Dashboard ViewModel for MainLert app.
- * Uses VehicleServiceMapping for all service readings - the new architecture.
+ * Handles dashboard state and service operations with real-time accelerometer integration.
  */
 @HiltViewModel
 class DashboardViewModel
@@ -42,85 +40,12 @@ class DashboardViewModel
         private val vehicleRepository: VehicleRepository,
         private val serviceVariantRepository: ServiceVariantRepository,
         private val authRepository: AuthRepository,
-        private val vehicleServiceMappingRepository: VehicleServiceMappingRepository,
-        private val syncManager: SyncManager,
         @ApplicationContext private val context: Context,
     ) : ViewModel() {
-    
-    // VehicleServiceMappings state for independent per-vehicle readings
-    private val _vehicleServiceMappings = MutableStateFlow<List<VehicleServiceMapping>>(emptyList())
-    val vehicleServiceMappings: StateFlow<List<VehicleServiceMapping>> = _vehicleServiceMappings.asStateFlow()
-
-    // Live mapping data from Firestore real-time listeners
-    private val _liveMappings = MutableStateFlow<Map<String, VehicleServiceMapping>>(emptyMap())
-    val liveMappings: StateFlow<Map<String, VehicleServiceMapping>> = _liveMappings.asStateFlow()
-
-    private var currentMappingId: String? = null
 
     /** Throttle interval for UI updates (500ms) */
     private var lastUiUpdateTime = 0L
     private val uiUpdateThrottleMs = 500L
-
-    // Missing MutableStateFlow variables
-    private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
-    val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
-
-    private val _selectedVehicle = MutableStateFlow<Vehicle?>(null)
-    val selectedVehicle: StateFlow<Vehicle?> = _selectedVehicle.asStateFlow()
-
-    private val _isMonitoring = MutableStateFlow(false)
-    val isMonitoring: StateFlow<Boolean> = _isMonitoring.asStateFlow()
-
-    private val _serviceReadingsMap = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val serviceReadingsMap: StateFlow<Map<String, Int>> = _serviceReadingsMap.asStateFlow()
-
-    private val _vehicleServices = MutableStateFlow<List<Service>>(emptyList())
-    val vehicleServices: StateFlow<List<Service>> = _vehicleServices.asStateFlow()
-
-    private val _serviceVariants = MutableStateFlow<List<ServiceVariant>>(emptyList())
-    val serviceVariants: StateFlow<List<ServiceVariant>> = _serviceVariants.asStateFlow()
-
-    private val _allUsers = MutableStateFlow<List<User>>(emptyList())
-    val allUsers: StateFlow<List<User>> = _allUsers.asStateFlow()
-
-    private val _showVehicleSelectionDialog = MutableStateFlow(false)
-    val showVehicleSelectionDialog: StateFlow<Boolean> = _showVehicleSelectionDialog.asStateFlow()
-
-    private val _showResetServiceDialog = MutableStateFlow(false)
-    val showResetServiceDialog: StateFlow<Boolean> = _showResetServiceDialog.asStateFlow()
-
-    // Boot receiver toggle state
-    private val _bootReceiverEnabled = MutableStateFlow(false)
-    val bootReceiverEnabled: StateFlow<Boolean> = _bootReceiverEnabled.asStateFlow()
-
-    private val _shouldShowVehicleSelectionFromBoot = MutableStateFlow(false)
-    val shouldShowVehicleSelectionFromBoot: StateFlow<Boolean> = _shouldShowVehicleSelectionFromBoot.asStateFlow()
-
-    private val _resetDialogStep = MutableStateFlow<ResetDialogStep>(ResetDialogStep.SELECT_DRIVER)
-    val resetDialogStep: StateFlow<ResetDialogStep> = _resetDialogStep.asStateFlow()
-
-    private val _selectedDriverForReset = MutableStateFlow<User?>(null)
-    val selectedDriverForReset: StateFlow<User?> = _selectedDriverForReset.asStateFlow()
-
-    private val _selectedVehicleForReset = MutableStateFlow<Vehicle?>(null)
-    val selectedVehicleForReset: StateFlow<Vehicle?> = _selectedVehicleForReset.asStateFlow()
-
-    private val _selectedServiceForReset = MutableStateFlow<Service?>(null)
-    val selectedServiceForReset: StateFlow<Service?> = _selectedServiceForReset.asStateFlow()
-
-    private val _mileageThreshold = MutableStateFlow(20000f)
-    val mileageThreshold: StateFlow<Float> = _mileageThreshold.asStateFlow()
-
-    private val _accelerometerReadings = MutableStateFlow<Triple<Float, Float, Float>>(Triple(0f, 0f, 0f))
-    val accelerometerReadings: StateFlow<Triple<Float, Float, Float>> = _accelerometerReadings.asStateFlow()
-
-    // Additional state variables
-        private var monitoredVehicleId: String? = null
-    
-        // Battery level state - initialized to 100% to pass validation
-        private val _batteryLevel = MutableStateFlow<Float?>(100f)
-        val batteryLevel: StateFlow<Float?> = _batteryLevel.asStateFlow()
-
 
     /** Broadcast receiver for accelerometer data from the service */
     private val accelerometerReceiver =
@@ -129,7 +54,6 @@ class DashboardViewModel
                 context: Context?,
                 intent: Intent?,
             ) {
-                
                 intent?.let {
                     val currentTime = System.currentTimeMillis()
                     // Throttle UI updates to prevent excessive recompositions
@@ -143,62 +67,31 @@ class DashboardViewModel
                     val z = it.getFloatExtra(AccelerometerService.EXTRA_Z, 0f)
                     val totalMovement = it.getFloatExtra(AccelerometerService.EXTRA_TOTAL_MOVEMENT, 0f)
                     val isMonitoring = it.getBooleanExtra(AccelerometerService.EXTRA_IS_MONITORING, false)
-                    val vehicleId = it.getStringExtra(AccelerometerService.EXTRA_VEHICLE_ID)
 
-                    // Update accelerometer readings when service is monitoring
-                    // Trust the service's isMonitoring flag as the source of truth
-                    if (isMonitoring) {
-                        _accelerometerReadings.value = Triple(x, y, z)
-                        
-                        // Update readings for ALL services assigned to the monitored vehicle
-                        if (vehicleId != null) {
-                            updateReadingsForAllVehicleServices(vehicleId, totalMovement.toInt())
-                        }
-                        
-                        android.util.Log.d("DashboardViewModel", "Updated readings: x=$x, y=$y, z=$z, vehicleId=$vehicleId")
-                    } else {
-                        android.util.Log.d("DashboardViewModel", "Monitoring not active, ignoring broadcast update")
-                    }
+                    _accelerometerReadings.value = Triple(x, y, z)
+                    _isMonitoring.value = isMonitoring
+                    _serviceReadings.value = totalMovement.toInt()
+                    android.util.Log.d("DashboardViewModel", "Updated readings: x=$x, y=$y, z=$z")
                 }
             }
         }
 
     init {
-        Log.d("BroadcastDebug", ">>> DashboardViewModel init() - Registering accelerometer receiver")
         // Register for accelerometer broadcasts from the service
         val filter = IntentFilter(AccelerometerService.ACTION_BROADCAST_ACCELEROMETER)
         LocalBroadcastManager.getInstance(context).registerReceiver(
             accelerometerReceiver,
             filter,
         )
-        Log.d("BroadcastDebug", ">>> DashboardViewModel init() - Accelerometer receiver registered successfully")
         android.util.Log.d("DashboardViewModel", "Accelerometer receiver registered")
-        
-        // Load boot receiver enabled state from SharedPreferences
-        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        _bootReceiverEnabled.value = prefs.getBoolean("boot_receiver_enabled", false)
-        
-        // Check if we should show vehicle selection from boot detection
-        val bootDetectionPrefs = context.getSharedPreferences("boot_detection", Context.MODE_PRIVATE)
-        val shouldShow = bootDetectionPrefs.getBoolean("show_vehicle_selection", false)
-        if (shouldShow) {
-            android.util.Log.d("DashboardViewModel", "Boot detection flag found - will show vehicle selection dialog")
-            _shouldShowVehicleSelectionFromBoot.value = true
-            // Clear the flag after reading
-            bootDetectionPrefs.edit().putBoolean("show_vehicle_selection", false).apply()
-        }
     }
 
     override fun onCleared() {
-        Log.d("BroadcastDebug", ">>> DashboardViewModel onCleared() - Unregistering accelerometer receiver")
         super.onCleared()
-        
         // Unregister to prevent memory leaks
         try {
             LocalBroadcastManager.getInstance(context).unregisterReceiver(accelerometerReceiver)
-            Log.d("BroadcastDebug", ">>> DashboardViewModel onCleared() - Accelerometer receiver unregistered successfully")
         } catch (e: IllegalArgumentException) {
-            Log.d("BroadcastDebug", ">>> DashboardViewModel onCleared() - Receiver was not registered (safe to ignore)")
             // Receiver was not registered
         }
     }
@@ -228,97 +121,124 @@ class DashboardViewModel
     val services: StateFlow<List<Service>> = _services.asStateFlow()
 
     /**
-     * Creates a VehicleServiceMapping for a service-vehicle pair if it doesn't already exist.
-     * Uses the current authenticated user's ID for proper authentication context.
-     * Validates that the vehicle belongs to the current user.
-     * 
-     * @param service The service to create mapping for
-     * @param vehicle The vehicle containing user information
-     * @return true if mapping was created successfully or already exists, false otherwise
+     * Current service reading, if available.
      */
-    private suspend fun createMappingForServiceAndVehicle(service: Service, vehicle: Vehicle): Boolean {
-        return try {
-            // Get current authenticated user ID
-            val currentUserId = authRepository.getCurrentUserId()
-            if (currentUserId == null) {
-                android.util.Log.e("DashboardViewModel", "Cannot create mapping: User not authenticated")
-                return false
-            }
-            
-            // Validate that the vehicle belongs to the current user
-            if (vehicle.userId != currentUserId) {
-                android.util.Log.e("DashboardViewModel", "Cannot create mapping: Vehicle ${vehicle.id} belongs to user ${vehicle.userId}, but current user is $currentUserId")
-                return false
-            }
-            
-            // Check if mapping already exists
-            when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicle.id, service.id)) {
-                is Result.Success -> {
-                    if (mappingResult.data != null) {
-                        android.util.Log.d("DashboardViewModel", "Mapping already exists for vehicle ${vehicle.id} and service ${service.id}")
-                        return true
-                    }
-                }
-                is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Error checking existing mapping: ${mappingResult.message}")
-                    // Continue to create mapping
-                }
-            }
-            
-            // Get variant details if service has a variantId
-            var variantName = service.variantName
-            var variantId = service.variantId
-            var mileageLimit = service.mileageLimit
-            
-            if (service.variantId.isNotEmpty()) {
-                when (val variantResult = serviceVariantRepository.getVariantById(service.variantId)) {
-                    is Result.Success -> {
-                        val variant = variantResult.data
-                        if (variant != null) {
-                            variantName = variant.name
-                            mileageLimit = variant.mileageLimit
-                            android.util.Log.d("DashboardViewModel", "Using variant details for service ${service.id}: variantName=$variantName, mileageLimit=$mileageLimit")
-                        }
-                    }
-                    is Result.Failure -> {
-                        android.util.Log.w("DashboardViewModel", "Failed to fetch variant details for service ${service.id}: ${variantResult.message}")
-                    }
-                }
-            }
-            
-            val newMapping = VehicleServiceMapping(
-                vehicleId = vehicle.id,
-                serviceId = service.id,
-                userId = currentUserId,
-                serviceName = variantName.ifEmpty { service.name },
-                variantId = variantId,
-                variantName = variantName,
-                totalMovement = 0f,
-                isMonitoring = false,
-                status = VehicleServiceMapping.MappingStatus.ACTIVE,
-                lastReadingTime = System.currentTimeMillis(),
-                mileageLimit = mileageLimit,
-            )
-            
-            when (val createResult = vehicleServiceMappingRepository.createMapping(newMapping)) {
-                is Result.Success -> {
-                    android.util.Log.d("DashboardViewModel", "Created VehicleServiceMapping for service ${service.id} and vehicle ${vehicle.id}")
-                    true
-                }
-                is Result.Failure -> {
-                    android.util.Log.e("DashboardViewModel", "Failed to create mapping: ${createResult.message}")
-                    false
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error creating mapping for service ${service.id} and vehicle ${vehicle.id}", e)
-            false
-        }
+    private val _currentReadings = MutableStateFlow<ServiceReading?>(null)
+    val currentReadings: StateFlow<ServiceReading?> = _currentReadings.asStateFlow()
+
+    /**
+     * Indicates if accelerometer monitoring is active.
+     */
+    private val _isMonitoring = MutableStateFlow(false)
+    val isMonitoring: StateFlow<Boolean> = _isMonitoring.asStateFlow()
+
+    /**
+     * Current service readings value.
+     */
+    private val _serviceReadings = MutableStateFlow(0)
+    val serviceReadings: StateFlow<Int> = _serviceReadings.asStateFlow()
+
+    /**
+     * Indicates if a service is currently active.
+     */
+    private val _isServiceActive = MutableStateFlow(false)
+    val isServiceActive: StateFlow<Boolean> = _isServiceActive.asStateFlow()
+
+    /**
+     * Mileage threshold value for service readings.
+     */
+    private val _mileageThreshold = MutableStateFlow(20000)
+    val mileageThreshold: StateFlow<Int> = _mileageThreshold.asStateFlow()
+
+    /**
+     * Service status summary with detailed information.
+     */
+    private val _serviceStatus = MutableStateFlow<ServiceStatusSummary?>(null)
+    val serviceStatus: StateFlow<ServiceStatusSummary?> = _serviceStatus.asStateFlow()
+
+    /**
+     * List of recent service readings for analytics.
+     */
+    private val _recentReadings = MutableStateFlow<List<ServiceReading>>(emptyList())
+    val recentReadings: StateFlow<List<ServiceReading>> = _recentReadings.asStateFlow()
+
+    /**
+     * Battery level for monitoring optimization.
+     */
+    private val _batteryLevel = MutableStateFlow(100)
+    val batteryLevel: StateFlow<Int> = _batteryLevel.asStateFlow()
+
+    /**
+     * Connection status indicator.
+     */
+    private val _isConnected = MutableStateFlow(true)
+    val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
+
+    /**
+     * Current accelerometer readings (x, y, z values).
+     */
+    private val _accelerometerReadings = MutableStateFlow(Triple(0f, 0f, 0f))
+    val accelerometerReadings: StateFlow<Triple<Float, Float, Float>> = _accelerometerReadings.asStateFlow()
+
+    // Vehicle-related state
+    private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
+    val vehicles: StateFlow<List<Vehicle>> = _vehicles.asStateFlow()
+
+    private val _selectedVehicle = MutableStateFlow<Vehicle?>(null)
+    val selectedVehicle: StateFlow<Vehicle?> = _selectedVehicle.asStateFlow()
+
+    private val _vehicleServices = MutableStateFlow<List<Service>>(emptyList())
+    val vehicleServices: StateFlow<List<Service>> = _vehicleServices.asStateFlow()
+
+    // Service variant state
+    private val _serviceVariants = MutableStateFlow<List<ServiceVariant>>(emptyList())
+    val serviceVariants: StateFlow<List<ServiceVariant>> = _serviceVariants.asStateFlow()
+
+    // Vehicle selection dialog state
+    private val _showVehicleSelectionDialog = MutableStateFlow(false)
+    val showVehicleSelectionDialog: StateFlow<Boolean> = _showVehicleSelectionDialog.asStateFlow()
+
+    // Reset Service dialog state
+    private val _showResetServiceDialog = MutableStateFlow(false)
+    val showResetServiceDialog: StateFlow<Boolean> = _showResetServiceDialog.asStateFlow()
+
+    private val _resetDialogStep = MutableStateFlow(ResetDialogStep.SELECT_DRIVER)
+    val resetDialogStep: StateFlow<ResetDialogStep> = _resetDialogStep.asStateFlow()
+
+    private val _selectedDriverForReset = MutableStateFlow<User?>(null)
+    val selectedDriverForReset: StateFlow<User?> = _selectedDriverForReset.asStateFlow()
+
+    private val _selectedVehicleForReset = MutableStateFlow<Vehicle?>(null)
+    val selectedVehicleForReset: StateFlow<Vehicle?> = _selectedVehicleForReset.asStateFlow()
+
+    private val _selectedServiceForReset = MutableStateFlow<Service?>(null)
+    val selectedServiceForReset: StateFlow<Service?> = _selectedServiceForReset.asStateFlow()
+
+    // For admin: list of all users (drivers)
+    private val _allUsers = MutableStateFlow<List<User>>(emptyList())
+    val allUsers: StateFlow<List<User>> = _allUsers.asStateFlow()
+
+    // For employee: their assigned vehicles (already in _vehicles)
+    // For employee: their assigned services for selected vehicle (already in _vehicleServices)
+
+    /**
+     * Holds the ID of the current service, if any.
+     */
+    private var currentServiceId: String? = null
+
+    /**
+     * Holds the ID of the currently monitored vehicle.
+     * This is used to enforce vehicle locking - only one vehicle can be monitored at a time.
+     */
+    private var monitoredVehicleId: String? = null
+
+    init {
+        // Loads all services for the current user on ViewModel initialization.
+        loadServices()
     }
 
     /**
      * Loads all services for the current user and updates the services state.
-     * FIXED: Now uses VehicleRepository directly to get vehicle info instead of relying on _vehicles.value
      */
     fun loadServices() {
         viewModelScope.launch {
@@ -328,12 +248,11 @@ class DashboardViewModel
             when (val result = serviceRepository.getServices()) {
                 is Result.Success -> {
                     _services.value = result.data ?: emptyList()
-                    
-                    // Also load VehicleServiceMappings for all vehicles to get services with independent readings
-                    // Use VehicleRepository directly instead of relying on _vehicles.value
-                    loadMappingsForCurrentUserVehicles()
-                    
-                    // No need to track currentServiceId in vehicle-centric monitoring
+                    // Auto-select first service if available
+                    if (_services.value.isNotEmpty()) {
+                        currentServiceId = _services.value.first().id
+                        getServiceStatusSummary(currentServiceId!!)
+                    }
                 }
                 is Result.Failure -> {
                     _errorMessage.value = result.message ?: "Failed to load services"
@@ -343,32 +262,6 @@ class DashboardViewModel
             _isLoading.value = false
         }
     }
-    
-    /**
-     * Loads VehicleServiceMappings for the current user's vehicles.
-     * This ensures independent readings per vehicle-service combination.
-     * FIXED: Now uses getCurrentUserId() to get user ID synchronously
-     */
-    private fun loadMappingsForCurrentUserVehicles() {
-    // Get current user ID
-    val currentUserId = authRepository.getCurrentUserId()
-    if (currentUserId != null) {
-        viewModelScope.launch {
-            when (val vehicleResult = vehicleRepository.getVehiclesForUser(currentUserId)) {
-                is Result.Success -> {
-                    val vehicles = vehicleResult.data ?: emptyList()
-                    if (vehicles.isNotEmpty()) {
-                        loadMappingsForVehicles(vehicles.map { it.id })
-                    }
-                }
-                is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Failed to load vehicles for mappings: ${vehicleResult.message}")
-                }
-            }
-        }
-    }
-}
-
 
     /**
      * Starts the accelerometer monitoring service.
@@ -376,13 +269,16 @@ class DashboardViewModel
      * - 1 vehicle: auto-select and start immediately
      * - Multiple vehicles: show selection dialog
      * - 0 vehicles: show error
-     * FIXED: Now uses VehicleRepository directly to get vehicle info instead of relying on _vehicles.value
+     * 
+     * When monitoring is already active, enforces vehicle locking:
+     * - Can only monitor one vehicle at a time
+     * - Must stop current monitoring before starting a different vehicle
      */
     fun startMonitoringService() {
         android.util.Log.i("DashboardViewModel", ">>> START BUTTON CLICKED <<<")
 
         // Validate battery level before proceeding
-        if ((_batteryLevel.value ?: 0f) < 20) {
+        if (_batteryLevel.value < 20) {
             _errorMessage.value = "Battery level too low. Please charge your device before starting monitoring."
             android.util.Log.w("DashboardViewModel", "Battery level too low: ${_batteryLevel.value}")
             return
@@ -390,73 +286,22 @@ class DashboardViewModel
 
         // Check if monitoring is already active - enforce vehicle locking
         if (_isMonitoring.value && monitoredVehicleId != null) {
-            viewModelScope.launch {
-                _isLoading.value = true
-                // Get current vehicle info directly from repository
-                when (val vehicleResult = vehicleRepository.getVehicleById(monitoredVehicleId ?: "")) {
-                    is Result.Success -> {
-                        val currentVehicle = vehicleResult.data
-                        _errorMessage.value = "Already monitoring ${currentVehicle?.name ?: "a vehicle"}. Please stop monitoring first before switching vehicles."
-                        android.util.Log.w("DashboardViewModel", "Vehicle locking: Already monitoring vehicle $monitoredVehicleId")
-                    }
-                    is Result.Failure -> {
-                        _errorMessage.value = "Already monitoring a vehicle. Please stop monitoring first before switching vehicles."
-                        android.util.Log.w("DashboardViewModel", "Vehicle locking: Already monitoring vehicle $monitoredVehicleId (failed to fetch details)")
-                    }
-                }
-                _isLoading.value = false
-            }
+            val currentVehicle = _vehicles.value.find { it.id == monitoredVehicleId }
+            _errorMessage.value = "Already monitoring ${currentVehicle?.name ?: "a vehicle"}. Please stop monitoring first before switching vehicles."
+            android.util.Log.w("DashboardViewModel", "Vehicle locking: Already monitoring vehicle $monitoredVehicleId")
             return
         }
 
-        // Get current user ID
-        val currentUserId = authRepository.getCurrentUserId()
-        if (currentUserId == null) {
-            _errorMessage.value = "User not authenticated. Please log in again."
-            return
-        }
-
-        // Determine vehicles to use: prefer state, fallback to repository if state empty
-        if (_vehicles.value.isNotEmpty()) {
-            // Use already-loaded vehicles from state
-            decideAndShowDialogOrStart(_vehicles.value)
-        } else {
-            // State empty, need to fetch vehicles from repository
-            viewModelScope.launch {
-                _isLoading.value = true
-                when (val vehicleResult = vehicleRepository.getVehiclesForUser(currentUserId)) {
-                    is Result.Success -> {
-                        val vehicles = vehicleResult.data ?: emptyList()
-                        // Update state for future use
-                        _vehicles.value = vehicles
-                        decideAndShowDialogOrStart(vehicles)
-                    }
-                    is Result.Failure -> {
-                        _errorMessage.value = "Failed to load vehicles: ${vehicleResult.message}"
-                        android.util.Log.e("DashboardViewModel", "Failed to load vehicles: ${vehicleResult.message}")
-                    }
-                }
-                _isLoading.value = false
-            }
-        }
-    }
-
-    /**
-     * Decides whether to show vehicle selection dialog or auto-start based on vehicle count.
-     */
-    private fun decideAndShowDialogOrStart(vehicles: List<Vehicle>) {
-        val vehicleCount = vehicles.size
-        android.util.Log.d("DashboardViewModel", "Vehicle count: $vehicleCount, vehicles: ${vehicles.map { it.name }}")
-        android.util.Log.d("DashboardViewModel", "showVehicleSelectionDialog will be set to: ${vehicleCount > 1}")
+        val vehicleCount = _vehicles.value.size
+        android.util.Log.d("DashboardViewModel", "Vehicle count: $vehicleCount")
 
         when {
             vehicleCount == 0 -> {
-                android.util.Log.w("DashboardViewModel", "No vehicles - showing error")
                 _errorMessage.value = "No vehicles assigned. Please contact your administrator."
             }
             vehicleCount == 1 -> {
                 // Auto-select the single vehicle and start monitoring
-                val singleVehicle = vehicles.first()
+                val singleVehicle = _vehicles.value.first()
                 android.util.Log.d("DashboardViewModel", "Auto-selecting single vehicle: ${singleVehicle.name}")
                 startMonitoringForVehicle(singleVehicle.id)
             }
@@ -464,26 +309,15 @@ class DashboardViewModel
                 // Multiple vehicles - show selection dialog
                 android.util.Log.d("DashboardViewModel", "Multiple vehicles ($vehicleCount), showing selection dialog")
                 _showVehicleSelectionDialog.value = true
-                android.util.Log.d("DashboardViewModel", "Set _showVehicleSelectionDialog to true, current value: ${_showVehicleSelectionDialog.value}")
             }
         }
     }
 
     /**
-     * Battery level - using default value for now
-     */
-
-    /**
      * Hides the vehicle selection dialog.
      */
     fun hideVehicleSelectionDialog() {
-        android.util.Log.d("DashboardViewModel", "Hiding vehicle selection dialog")
         _showVehicleSelectionDialog.value = false
-    }
-
-    fun showVehicleSelectionDialog() {
-        android.util.Log.d("DashboardViewModel", "Showing vehicle selection dialog")
-        _showVehicleSelectionDialog.value = true
     }
 
     /**
@@ -491,159 +325,97 @@ class DashboardViewModel
      * Starts monitoring for the selected vehicle.
      */
     fun onVehicleSelectedForMonitoring(vehicle: Vehicle) {
-        android.util.Log.d("DashboardViewModel", "Vehicle selected for monitoring: ${vehicle.name}")
         _showVehicleSelectionDialog.value = false
         startMonitoringForVehicle(vehicle.id)
-    }
-
-    // ========== Boot Receiver Methods ==========
-
-    /**
-     * Returns the current boot receiver enabled state.
-     */
-    fun isBootReceiverEnabled(): Boolean {
-        return _bootReceiverEnabled.value
-    }
-
-    /**
-     * Sets the boot receiver enabled state and persists to SharedPreferences.
-     */
-    fun setBootReceiverEnabled(enabled: Boolean) {
-        android.util.Log.d("DashboardViewModel", "Setting boot receiver enabled: $enabled")
-        _bootReceiverEnabled.value = enabled
-        val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("boot_receiver_enabled", enabled).apply()
-    }
-
-    /**
-     * Clears the boot detection flag after it has been handled.
-     * Called when the vehicle selection dialog is shown from boot detection.
-     */
-    fun clearBootDetectionFlag() {
-        android.util.Log.d("DashboardViewModel", "Clearing boot detection flag")
-        _shouldShowVehicleSelectionFromBoot.value = false
-        val prefs = context.getSharedPreferences("boot_detection", Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("show_vehicle_selection", false).apply()
     }
 
     /**
      * Stops the accelerometer monitoring service.
      */
     fun stopMonitoringService() {
-        android.util.Log.i("DashboardViewModel", ">>> STOP BUTTON CLICKED <<<")
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
 
-            val vehicleIdToStop = monitoredVehicleId
-            
-            if (vehicleIdToStop != null) {
-                android.util.Log.d("DashboardViewModel", "Stopping monitoring for vehicle: $vehicleIdToStop")
-            } else {
-                android.util.Log.w("DashboardViewModel", "No monitored vehicle to stop")
-            }
-
             // Stop the accelerometer service
-            // The service will handle:
-            // - Saving final readings to VehicleServiceMapping
-            // - Updating vehicle lifetime mileage
-            // - Clearing its internal state
-            // - Stopping itself
             AccelerometerService.stopService(context)
 
-            // Update UI state immediately (don't wait for service to finish)
-            _isMonitoring.value = false
-            
-            // Clear monitored vehicle ID (unlock vehicle)
-            monitoredVehicleId = null
-            currentMappingId = null
+            if (currentServiceId != null) {
+                // Stop service monitoring in Firebase
+                val stopResult = serviceRepository.stopServiceMonitoring(currentServiceId!!)
 
-            _successMessage.value = "Monitoring stopped successfully"
-            android.util.Log.i("DashboardViewModel", "Monitoring stop initiated successfully")
+                when (stopResult) {
+                    is Result.Success -> {
+                        _isMonitoring.value = false
+                        _isServiceActive.value = false
+
+                        // Clear monitored vehicle ID (unlock vehicle)
+                        monitoredVehicleId = null
+
+                        // Update service status
+                        _serviceStatus.value =
+                            _serviceStatus.value?.copy(
+                                isMonitoring = false,
+                                lastReadingTime = System.currentTimeMillis(),
+                            )
+
+                        _successMessage.value = "Monitoring stopped successfully"
+                    }
+                    is Result.Failure -> {
+                        _errorMessage.value = stopResult.message ?: "Failed to stop service monitoring"
+                    }
+                }
+            } else {
+                // Even if no service ID, clear monitored vehicle
+                monitoredVehicleId = null
+                _errorMessage.value = "No active service to stop"
+            }
 
             _isLoading.value = false
         }
     }
-    
-    /**
-     * Stops mapping monitoring for a specific vehicle-service combination.
-     */
-    private suspend fun stopMappingMonitoringForVehicleAndService(vehicleId: String, serviceId: String) {
-        when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)) {
-            is Result.Success -> {
-                mappingResult.data?.let { mapping ->
-                    vehicleServiceMappingRepository.stopMappingMonitoring(mapping.id)
-                }
-            }
-            is Result.Failure -> {
-                android.util.Log.w("DashboardViewModel", "Failed to stop mapping monitoring: ${mappingResult.message}")
-            }
-        }
-    }
 
-    /**
-     * Resets all service readings for the currently monitored vehicle.
-     * In the vehicle-centric architecture, all services on a vehicle are reset together.
-     */
     fun resetServiceData() {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
             _successMessage.value = ""
 
-            val vehicleId = monitoredVehicleId
-            if (vehicleId != null) {
-                // Reset all mappings for this vehicle
-                resetAllMappingsForVehicle(vehicleId)
-                _serviceReadingsMap.value = emptyMap()
-                _successMessage.value = "All service readings reset successfully"
-            } else {
-                _errorMessage.value = "No active vehicle monitoring to reset"
+            currentServiceId?.let { serviceId ->
+                val resetResult = serviceRepository.resetServiceReadings(serviceId)
+
+                when (resetResult) {
+                    is Result.Success -> {
+                        _serviceReadings.value = 0
+                        _serviceStatus.value =
+                            _serviceStatus.value?.copy(
+                                totalMovement = 0f,
+                                totalReadings = 0,
+                            )
+                        _successMessage.value = "Service readings reset successfully"
+                    }
+                    is Result.Failure -> {
+                        _errorMessage.value = resetResult.message ?: "Failed to reset service readings"
+                    }
+                }
+            } ?: run {
+                _errorMessage.value = "No active service to reset"
             }
 
             _isLoading.value = false
         }
     }
-    
-    /**
-     * Resets all VehicleServiceMappings for a specific vehicle.
-     */
-    private suspend fun resetAllMappingsForVehicle(vehicleId: String) {
-        try {
-            when (val mappingsResult = vehicleServiceMappingRepository.getMappingsForVehicle(vehicleId)) {
-                is Result.Success -> {
-                    val mappings = mappingsResult.data ?: emptyList()
-                    mappings.forEach { mapping ->
-                        vehicleServiceMappingRepository.resetMappingReadings(mapping.id)
-                        android.util.Log.d("DashboardViewModel", "Reset mapping ${mapping.id} for service ${mapping.serviceId}")
-                    }
-                }
-                is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Failed to get mappings for vehicle $vehicleId: ${mappingsResult.message}")
-                }
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error resetting mappings for vehicle $vehicleId", e)
-        }
-    }
-    
-    /**
-     * Resets mapping readings for a specific vehicle-service combination.
-     */
-    private suspend fun resetMappingReadingsForVehicleAndService(vehicleId: String, serviceId: String) {
-        when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)) {
-            is Result.Success -> {
-                mappingResult.data?.let { mapping ->
-                    vehicleServiceMappingRepository.resetMappingReadings(mapping.id)
-                }
-            }
-            is Result.Failure -> {
-                android.util.Log.w("DashboardViewModel", "Failed to reset mapping readings: ${mappingResult.message}")
-            }
-        }
-    }
 
     fun updateServiceReadings(readings: Int) {
+        _serviceReadings.value = readings
+
+        // Update service status
+        _serviceStatus.value =
+            _serviceStatus.value?.copy(
+                totalMovement = readings.toFloat(),
+                lastReadingTime = System.currentTimeMillis(),
+            )
+
         // Check for Mileage
         if (readings >= mileageThreshold.value) {
             _errorMessage.value = "Mileage detected! Service has reached threshold."
@@ -655,19 +427,14 @@ class DashboardViewModel
             _isLoading.value = true
             _errorMessage.value = ""
 
-            // Check via VehicleServiceMapping
-            monitoredVehicleId?.let { vehicleId ->
-                when (val result = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)) {
-                    is Result.Success -> {
-                        result.data?.let { mapping ->
-                            if (mapping.totalMovement >= mapping.mileageLimit) {
-                                _errorMessage.value = "Service has reached mileage threshold!"
-                            }
-                        }
+            when (val result = serviceRepository.checkMileageStatus(serviceId)) {
+                is Result.Success -> {
+                    if (result.data == true) {
+                        _errorMessage.value = "Service has reached Mileage threshold!"
                     }
-                    is Result.Failure -> {
-                        _errorMessage.value = result.message ?: "Failed to check mileage status"
-                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to check Mileage status"
                 }
             }
 
@@ -677,6 +444,298 @@ class DashboardViewModel
 
     fun getCurrentService(): Service? {
         return _services.value.firstOrNull()
+    }
+
+    fun observeServiceReadings(serviceId: String) {
+        viewModelScope.launch {
+            serviceRepository.observeServiceReadings(serviceId).collect { readings ->
+                _recentReadings.value = readings
+
+                val totalReadings = readings.sumOf { it.totalMovement.toDouble() }
+                _serviceReadings.value = totalReadings.toInt()
+
+                // Update service status with latest data
+                _serviceStatus.value =
+                    _serviceStatus.value?.copy(
+                        totalMovement = totalReadings.toFloat(),
+                        totalReadings = readings.size,
+                    )
+
+                // Check for Mileage against each vehicle service's individual limit
+                checkMileageForAllServices()
+            }
+        }
+    }
+
+    fun getServiceStatusSummary(serviceId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            when (val result = serviceRepository.getServiceStatusSummary(serviceId)) {
+                is Result.Success -> {
+                    val summary = result.data
+                    if (summary != null) {
+                        _serviceStatus.value = summary
+                        _isServiceActive.value = summary.isMonitoring
+                        _serviceReadings.value = summary.totalMovement.toInt()
+
+                        // Update Mileage threshold based on service configuration
+                        currentServiceId?.let { id ->
+                            when (val serviceResult = serviceRepository.getServiceById(id)) {
+                                is Result.Success -> {
+                                    serviceResult.data?.let { service ->
+                                        _mileageThreshold.value = service.mileageLimit.toInt()
+                                    }
+                                }
+                                is Result.Failure -> {
+                                    _errorMessage.value = serviceResult.message ?: "Failed to get service configuration"
+                                }
+                            }
+                        }
+                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to get service status"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Creates a new service with the specified details.
+     */
+    fun createService(
+        name: String,
+        description: String,
+        mileageLimit: Float,
+        vehicleId: String = "",
+        variantId: String = "",
+        variantName: String = "",
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            // Validate inputs
+            if (name.isBlank()) {
+                _errorMessage.value = "Service name cannot be empty"
+                _isLoading.value = false
+                return@launch
+            }
+
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
+                _isLoading.value = false
+                return@launch
+            }
+
+            val newService =
+                Service(
+                    name = name,
+                    description = description,
+                    mileageLimit = mileageLimit,
+                    vehicleIds = if (vehicleId.isNotEmpty()) listOf(vehicleId) else emptyList(),
+                    variantId = variantId,
+                    variantName = variantName.ifEmpty { "Standard" },
+                )
+
+            when (val result = serviceRepository.createService(newService)) {
+                is Result.Success -> {
+                    _successMessage.value = "Service created successfully"
+                    loadServices() // Refresh services list
+                    // Also refresh vehicle-specific services if a vehicle is selected
+                    if (vehicleId.isNotEmpty()) {
+                        loadServicesForVehicle(vehicleId)
+                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to create service"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Updates an existing service.
+     */
+    fun updateService(
+        serviceId: String,
+        name: String,
+        description: String,
+        mileageLimit: Float,
+        vehicleId: String = "",
+        variantId: String = "",
+        variantName: String = "",
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            // Validate inputs
+            if (name.isBlank()) {
+                _errorMessage.value = "Service name cannot be empty"
+                _isLoading.value = false
+                return@launch
+            }
+
+            if (mileageLimit <= 0) {
+                _errorMessage.value = "Mileage limit must be greater than 0"
+                _isLoading.value = false
+                return@launch
+            }
+
+            when (val serviceResult = serviceRepository.getServiceById(serviceId)) {
+                is Result.Success -> {
+                    val service = serviceResult.data
+                    if (service != null) {
+                        val updatedService =
+                            service.copy(
+                                name = name,
+                                description = description,
+                                mileageLimit = mileageLimit,
+                                vehicleIds = if (vehicleId.isEmpty()) service.vehicleIds else listOf(vehicleId),
+                                variantId = variantId.ifEmpty { service.variantId },
+                                variantName = variantName.ifEmpty { service.variantName.ifEmpty { "Standard" } },
+                            )
+
+                        when (val updateResult = serviceRepository.updateService(updatedService)) {
+                            is Result.Success -> {
+                                _successMessage.value = "Service updated successfully"
+                                loadServices() // Refresh services list
+
+                                // Also refresh vehicle-specific services if a vehicle is selected
+                                if (vehicleId.isNotEmpty()) {
+                                    loadServicesForVehicle(vehicleId)
+                                }
+
+                                // Update current service if it's the one being edited
+                                if (currentServiceId == serviceId) {
+                                    _mileageThreshold.value = mileageLimit.toInt()
+                                }
+                            }
+                            is Result.Failure -> {
+                                _errorMessage.value = updateResult.message ?: "Failed to update service"
+                            }
+                        }
+                    } else {
+                        _errorMessage.value = "Service not found"
+                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = serviceResult.message ?: "Failed to fetch service"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Deletes a service by ID.
+     */
+    fun deleteService(serviceId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            // Check if service is currently active
+            if (currentServiceId == serviceId && _isMonitoring.value) {
+                _errorMessage.value = "Cannot delete an active service. Please stop monitoring first."
+                _isLoading.value = false
+                return@launch
+            }
+
+            when (val result = serviceRepository.deleteService(serviceId)) {
+                is Result.Success -> {
+                    _successMessage.value = "Service deleted successfully"
+                    loadServices() // Refresh services list
+
+                    // Clear current service if it was deleted
+                    if (currentServiceId == serviceId) {
+                        currentServiceId = null
+                        _serviceStatus.value = null
+                        _isServiceActive.value = false
+                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to delete service"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Gets analytics data for the current service.
+     */
+    fun getServiceAnalytics(serviceId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            when (val result = serviceRepository.getServiceAnalytics(serviceId)) {
+                is Result.Success -> {
+                    val analytics = result.data
+                    if (analytics != null) {
+                        // Process analytics data
+                        _successMessage.value = "Analytics loaded successfully"
+                    }
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to load analytics"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Exports service data to a file or backup.
+     */
+    fun exportServiceData(serviceId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            when (val result = serviceRepository.exportServiceData(serviceId)) {
+                is Result.Success -> {
+                    _successMessage.value = "Service data exported successfully"
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to export service data"
+                }
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    /**
+     * Updates the current accelerometer readings.
+     */
+    fun updateAccelerometerReadings(x: Float, y: Float, z: Float) {
+        _accelerometerReadings.value = Triple(x, y, z)
+    }
+
+    /**
+     * Checks Mileage status for all vehicle services.
+     * Notification triggers when readings reach any service's Mileage limit.
+     */
+    fun checkMileageForAllServices() {
+        // Check each vehicle service's Mileage limit
+        _vehicleServices.value.forEach { service ->
+            if (_serviceReadings.value >= service.mileageLimit.toInt()) {
+                _errorMessage.value = "Mileage detected! ${service.variantName.ifEmpty { service.name }} has reached threshold."
+                android.util.Log.i("DashboardViewModel", "MILEAGE: ${service.name} reached ${service.mileageLimit} (current: ${_serviceReadings.value})")
+            }
+        }
     }
 
     // ========== Vehicle-related methods ==========
@@ -691,13 +750,7 @@ class DashboardViewModel
 
             when (val result = vehicleRepository.getAllVehicles()) {
                 is Result.Success -> {
-                    val vehicles = result.data ?: emptyList()
-                    _vehicles.value = vehicles
-                    
-                    // Also load VehicleServiceMappings for all vehicles to get services with independent readings
-                    if (vehicles.isNotEmpty()) {
-                        loadMappingsForVehicles(vehicles.map { it.id })
-                    }
+                    _vehicles.value = result.data ?: emptyList()
                 }
                 is Result.Failure -> {
                     _errorMessage.value = result.message ?: "Failed to load vehicles"
@@ -712,42 +765,20 @@ class DashboardViewModel
      * Loads vehicles for a specific user.
      */
     fun loadVehiclesForUser(userId: String) {
-        android.util.Log.d("DashboardViewModel", "loadVehiclesForUser called for userId: $userId")
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
 
             when (val result = vehicleRepository.getVehiclesForUser(userId)) {
                 is Result.Success -> {
-                    val vehicles = result.data ?: emptyList()
-                    android.util.Log.d("DashboardViewModel", "loadVehiclesForUser success: ${vehicles.size} vehicles: ${vehicles.map { it.name }}")
-                    _vehicles.value = vehicles
-                    android.util.Log.d("DashboardViewModel", "Set _vehicles.value to ${vehicles.size} vehicles")
-                    
-                    // Also load VehicleServiceMappings for all vehicles to get services with independent readings
-                    if (vehicles.isNotEmpty()) {
-                        loadMappingsForVehicles(vehicles.map { it.id })
-                    }
+                    _vehicles.value = result.data ?: emptyList()
                 }
                 is Result.Failure -> {
-                    android.util.Log.e("DashboardViewModel", "loadVehiclesForUser failed: ${result.message}")
                     _errorMessage.value = result.message ?: "Failed to load vehicles"
                 }
             }
 
             _isLoading.value = false
-        }
-        
-        // Trigger initial sync from Firebase to populate local database
-        // This runs in a separate coroutine to avoid blocking the UI
-        viewModelScope.launch {
-            try {
-                android.util.Log.d("DashboardViewModel", "Triggering initial sync from Firebase for user $userId")
-                syncManager.syncFromFirebase(userId)
-                android.util.Log.d("DashboardViewModel", "Initial sync completed for user $userId")
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Initial sync failed for user $userId: ${e.message}", e)
-            }
         }
     }
 
@@ -755,7 +786,6 @@ class DashboardViewModel
      * Selects a vehicle and loads its services.
      */
     fun selectVehicle(vehicle: Vehicle?) {
-        android.util.Log.d("DashboardViewModel", "selectVehicle called with: ${vehicle?.name}, vehicleId: ${vehicle?.id}")
         _selectedVehicle.value = vehicle
         vehicle?.let {
             loadServicesForVehicle(it.id)
@@ -763,62 +793,20 @@ class DashboardViewModel
     }
 
     /**
-     * Loads services for a specific vehicle using the new architecture.
-     * Uses VehicleServiceMappingRepository to get services with independent readings.
-     * FIXED: Now uses VehicleRepository directly to get vehicle info instead of relying on _vehicles.value
+     * Loads services for a specific vehicle.
      */
     fun loadServicesForVehicle(vehicleId: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
 
-            try {
-                // First get the services from the repository
-                // If _services is empty, load them first to ensure we have the global service templates
-                if (_services.value.isEmpty()) {
-                    android.util.Log.d("DashboardViewModel", "_services is empty, loading services first")
-                    when (val serviceResult = serviceRepository.getServices()) {
-                        is Result.Success -> {
-                            _services.value = serviceResult.data ?: emptyList()
-                            android.util.Log.d("DashboardViewModel", "Loaded ${_services.value.size} services into _services state")
-                        }
-                        is Result.Failure -> {
-                            android.util.Log.e("DashboardViewModel", "Failed to load services: ${serviceResult.message}")
-                        }
-                    }
+            when (val result = serviceRepository.getServicesForVehicle(vehicleId)) {
+                is Result.Success -> {
+                    _vehicleServices.value = result.data ?: emptyList()
                 }
-                
-                // Use the global services from _services (now guaranteed to be loaded)
-                val allServices = _services.value
-                if (allServices.isEmpty()) {
-                    _errorMessage.value = "No services found in system. Please add services first."
-                    android.util.Log.w("DashboardViewModel", "No services available in _services after loading")
-                    _isLoading.value = false
-                    return@launch
+                is Result.Failure -> {
+                    _errorMessage.value = result.message ?: "Failed to load services for vehicle"
                 }
-                
-                // Services are now GLOBAL templates - no filtering by userId
-                // VehicleServiceMapping handles the actual vehicle-service relationships
-                _vehicleServices.value = allServices
-                android.util.Log.d("DashboardViewModel", "Loaded ${allServices.size} global services for vehicle $vehicleId")
-
-                // Use the already-loaded mappings from state instead of querying Firebase again
-                val vehicleMappings = _vehicleServiceMappings.value.filter { it.vehicleId == vehicleId }
-                android.util.Log.d("DashboardViewModel", "Using ${vehicleMappings.size} mappings from state for vehicle $vehicleId (total mappings in state: ${_vehicleServiceMappings.value.size})")
-                
-                // Initialize readings from mappings (each mapping has independent totalMovement)
-                initializeServiceReadingsFromMappings(vehicleMappings)
-                
-                // If no mappings exist, show helpful message
-                if (vehicleMappings.isEmpty()) {
-                    _errorMessage.value = "No services assigned to this vehicle. Add services to see them here."
-                } else {
-                    _errorMessage.value = "" // Clear any previous error
-                }
-
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error loading services for vehicle $vehicleId", e)
-                _errorMessage.value = "Error loading services: ${e.message}"
             }
 
             _isLoading.value = false
@@ -833,14 +821,9 @@ class DashboardViewModel
             _isLoading.value = true
             _errorMessage.value = ""
 
-            when (val result = serviceRepository.getServices()) {
+            when (val result = serviceRepository.getServicesForVehicles(vehicleIds)) {
                 is Result.Success -> {
                     _vehicleServices.value = result.data ?: emptyList()
-                    
-                    // Also load VehicleServiceMappings for all vehicles to get services with independent readings
-                    if (vehicleIds.isNotEmpty()) {
-                        loadMappingsForVehicles(vehicleIds)
-                    }
                 }
                 is Result.Failure -> {
                     _errorMessage.value = result.message ?: "Failed to load services for vehicles"
@@ -856,12 +839,9 @@ class DashboardViewModel
      */
     fun createVehicle(
         name: String,
-        model: String,
-        year: Int,
         plateNumber: String,
         userId: String,
         employeeId: String = "",
-        initialLifetimeMileage: Float = 0f,
     ) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -876,12 +856,9 @@ class DashboardViewModel
             val vehicle =
                 Vehicle(
                     name = name,
-                    model = model,
-                    year = year,
                     plateNumber = plateNumber,
                     userId = userId,
                     employeeId = employeeId,
-                    lifetimeMileage = initialLifetimeMileage,
                 )
 
             when (val result = vehicleRepository.createVehicle(vehicle)) {
@@ -895,24 +872,6 @@ class DashboardViewModel
             }
 
             _isLoading.value = false
-        }
-    }
-
-    /**
-     * Updates the lifetime mileage for a vehicle.
-     * This accumulates forever and never resets.
-     */
-    fun updateVehicleLifetimeMileage(vehicleId: String, mileage: Float) {
-        viewModelScope.launch {
-            when (val result = vehicleRepository.updateVehicleLifetimeMileage(vehicleId, mileage)) {
-                is Result.Success -> {
-                    // Optionally refresh vehicles list
-                    loadAllVehicles()
-                }
-                is Result.Failure -> {
-                    _errorMessage.value = result.message ?: "Failed to update vehicle lifetime mileage"
-                }
-            }
         }
     }
 
@@ -1037,129 +996,6 @@ class DashboardViewModel
     /**
      * Updates an existing service variant.
      */
-    /**
-     * Creates a new service.
-     */
-    fun createService(
-        name: String,
-        description: String,
-        mileageLimit: Float,
-    ) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = ""
-
-            if (name.isBlank()) {
-                _errorMessage.value = "Service name cannot be empty"
-                _isLoading.value = false
-                return@launch
-            }
-
-            if (mileageLimit <= 0) {
-                _errorMessage.value = "Mileage limit must be greater than 0"
-                _isLoading.value = false
-                return@launch
-            }
-
-            val newService = Service(
-                name = name,
-                description = description,
-                mileageLimit = mileageLimit,
-            )
-
-            when (val result = serviceRepository.createService(newService)) {
-                is Result.Success -> {
-                    _successMessage.value = "Service created successfully"
-                    loadServices()
-                }
-                is Result.Failure -> {
-                    _errorMessage.value = result.message ?: "Failed to create service"
-                }
-            }
-
-            _isLoading.value = false
-        }
-    }
-
-    /**
-     * Updates an existing service.
-     */
-    fun updateService(
-        serviceId: String,
-        name: String,
-        description: String,
-        mileageLimit: Float,
-    ) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = ""
-
-            if (name.isBlank()) {
-                _errorMessage.value = "Service name cannot be empty"
-                _isLoading.value = false
-                return@launch
-            }
-
-            if (mileageLimit <= 0) {
-                _errorMessage.value = "Mileage limit must be greater than 0"
-                _isLoading.value = false
-                return@launch
-            }
-
-            when (val serviceResult = serviceRepository.getServiceById(serviceId)) {
-                is Result.Success -> {
-                    val service = serviceResult.data
-                    if (service != null) {
-                        val updatedService = service.copy(
-                            name = name,
-                            description = description,
-                            mileageLimit = mileageLimit,
-                        )
-
-                        when (val updateResult = serviceRepository.updateService(updatedService)) {
-                            is Result.Success -> {
-                                _successMessage.value = "Service updated successfully"
-                                loadServices()
-                            }
-                            is Result.Failure -> {
-                                _errorMessage.value = updateResult.message ?: "Failed to update service"
-                            }
-                        }
-                    } else {
-                        _errorMessage.value = "Service not found"
-                    }
-                }
-                is Result.Failure -> {
-                    _errorMessage.value = serviceResult.message ?: "Failed to fetch service"
-                }
-            }
-
-            _isLoading.value = false
-        }
-    }
-
-    /**
-     * Deletes a service by ID.
-     */
-    fun deleteService(serviceId: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = ""
-
-            when (val result = serviceRepository.deleteService(serviceId)) {
-                is Result.Success -> {
-                    _successMessage.value = "Service deleted successfully"
-                    loadServices()
-                }
-                is Result.Failure -> {
-                    _errorMessage.value = result.message ?: "Failed to delete service"
-                }
-            }
-
-            _isLoading.value = false
-        }
-    }
-
     fun updateServiceVariant(
         variantId: String,
         name: String,
@@ -1220,23 +1056,39 @@ class DashboardViewModel
      * @param serviceId The ID of the service to monitor
      * @param vehicleId The ID of the vehicle (optional, defaults to empty string)
      */
-    /**
-     * DEPRECATED: Use startMonitoringForVehicle() instead.
-     * Monitoring should be vehicle-centric, not per-service.
-     * This method now delegates to startMonitoringForVehicle() for backward compatibility.
-     */
     fun startMonitoringForService(serviceId: String, vehicleId: String = "") {
-        Log.w("DashboardViewModel", "startMonitoringForService() is deprecated. Use vehicle-level monitoring.")
-        
-        if (vehicleId.isEmpty()) {
-            viewModelScope.launch {
-                _errorMessage.value = "Vehicle selection required. Please start monitoring from the main button."
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = ""
+
+            if (_batteryLevel.value < 20) {
+                _errorMessage.value = "Battery level too low. Please charge your device before starting monitoring."
+                _isLoading.value = false
+                return@launch
             }
-            return
+
+            val startResult = serviceRepository.startServiceMonitoring(serviceId)
+
+            when (startResult) {
+                is Result.Success -> {
+                    AccelerometerService.startService(context, serviceId, vehicleId)
+                    _isMonitoring.value = true
+                    _isServiceActive.value = true
+                    currentServiceId = serviceId
+                    if (vehicleId.isNotEmpty()) {
+                        monitoredVehicleId = vehicleId
+                    }
+                    getServiceStatusSummary(serviceId)
+                    observeServiceReadings(serviceId)
+                    _successMessage.value = "Monitoring started successfully"
+                }
+                is Result.Failure -> {
+                    _errorMessage.value = startResult.message ?: "Failed to start monitoring"
+                }
+            }
+
+            _isLoading.value = false
         }
-        
-        // Delegate to vehicle-level monitoring
-        startMonitoringForVehicle(vehicleId)
     }
 
     // ========== Vehicle Assignment Methods ==========
@@ -1297,7 +1149,7 @@ class DashboardViewModel
 
             when (val result = vehicleRepository.getUnassignedVehicles()) {
                 is Result.Success -> {
-                    _vehicles.value = result.data ?: emptyList()
+                    // Return unassigned vehicles
                 }
                 is Result.Failure -> {
                     _errorMessage.value = result.message ?: "Failed to fetch unassigned vehicles"
@@ -1314,8 +1166,6 @@ class DashboardViewModel
      */
     fun createVehicleForDriver(
         vehicleName: String,
-        model: String,
-        year: Int,
         plateNumber: String,
         driverId: String,
         employeeId: String = "",
@@ -1324,7 +1174,7 @@ class DashboardViewModel
             _isLoading.value = true
             _errorMessage.value = ""
 
-            when (val result = vehicleRepository.createVehicleForDriver(vehicleName, model, year, plateNumber, driverId, employeeId)) {
+            when (val result = vehicleRepository.createVehicleForDriver(vehicleName, plateNumber, driverId, employeeId)) {
                 is Result.Success -> {
                     _successMessage.value = "Vehicle created and assigned successfully"
                     loadAllVehicles() // Refresh vehicles list
@@ -1339,8 +1189,8 @@ class DashboardViewModel
     }
 
     /**
-     * Adds a service to a vehicle by creating a VehicleServiceMapping for independent readings.
-     * FIXED: Now uses VehicleRepository directly to get vehicle info instead of relying on _vehicles.value
+     * Adds a service to a vehicle by adding the vehicleId to the service's vehicleIds list.
+     * This allows a service to be shared across multiple vehicles.
      */
     fun addServiceToVehicle(serviceId: String, vehicleId: String) {
         viewModelScope.launch {
@@ -1348,90 +1198,42 @@ class DashboardViewModel
             _errorMessage.value = ""
             _successMessage.value = ""
 
-            try {
-                // Get service info
-                val serviceResult = serviceRepository.getServiceById(serviceId)
-                val service = when (serviceResult) {
-                    is Result.Success -> serviceResult.data
-                    is Result.Failure -> {
-                        _errorMessage.value = serviceResult.message ?: "Failed to fetch service"
-                        _isLoading.value = false
-                        return@launch
+            when (val serviceResult = serviceRepository.getServiceById(serviceId)) {
+                is Result.Success -> {
+                    val service = serviceResult.data
+                    if (service != null) {
+                        // Check if service is already assigned to this vehicle
+                        if (service.vehicleIds.contains(vehicleId)) {
+                            _errorMessage.value = "Service is already assigned to this vehicle"
+                            _isLoading.value = false
+                            return@launch
+                        }
+                        // Add vehicleId to the list
+                        val currentVehicleIds = service.vehicleIds.toMutableList()
+                        currentVehicleIds.add(vehicleId)
+                        val updatedService = service.copy(vehicleIds = currentVehicleIds)
+                        when (val updateResult = serviceRepository.updateService(updatedService)) {
+                            is Result.Success -> {
+                                _successMessage.value = "Service added to vehicle successfully"
+                                loadServices() // Refresh services list
+                                // Also refresh vehicle-specific services if this vehicle is selected
+                                loadServicesForVehicle(vehicleId)
+                            }
+                            is Result.Failure -> {
+                                _errorMessage.value = updateResult.message ?: "Failed to add service to vehicle"
+                            }
+                        }
+                    } else {
+                        _errorMessage.value = "Service not found"
                     }
                 }
-
-                if (service == null) {
-                    _errorMessage.value = "Service not found"
-                    _isLoading.value = false
-                    return@launch
+                is Result.Failure -> {
+                    _errorMessage.value = serviceResult.message ?: "Failed to fetch service"
                 }
-
-                // Get vehicle info directly from repository (FIXED: don't rely on _vehicles.value)
-                val vehicleResult = vehicleRepository.getVehicleById(vehicleId)
-                val vehicle = when (vehicleResult) {
-                    is Result.Success -> vehicleResult.data
-                    is Result.Failure -> {
-                        _errorMessage.value = vehicleResult.message ?: "Failed to fetch vehicle"
-                        _isLoading.value = false
-                        return@launch
-                    }
-                }
-
-                if (vehicle == null) {
-                    _errorMessage.value = "Vehicle not found"
-                    _isLoading.value = false
-                    return@launch
-                }
-
-                // Create VehicleServiceMapping for independent readings
-                createMappingForServiceAndVehicle(service, vehicle)
-                
-                _successMessage.value = "Service added to vehicle successfully"
-                loadServices() // Refresh services list
-                // Also refresh vehicle-specific services if this vehicle is selected
-                loadServicesForVehicle(vehicleId)
-                
-                android.util.Log.i("DashboardViewModel", "Successfully created VehicleServiceMapping for service ${service.id} and vehicle $vehicleId")
-                
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to add service to vehicle: ${e.message}"
-                android.util.Log.e("DashboardViewModel", "Error adding service to vehicle: serviceId=$serviceId, vehicleId=$vehicleId", e)
             }
 
             _isLoading.value = false
         }
-    }
-    
-    
-    /**
-     * Validates permission for creating VehicleServiceMapping based on Firestore security rules.
-     * Follows the same logic as firestore.rules to avoid permission errors.
-     */
-    private fun validateVehicleServiceMappingPermission(
-        vehicle: Vehicle,
-        currentUserId: String,
-        currentUserRole: User.UserRole?
-    ): Boolean {
-        // Rule 1: User can create mappings for vehicles they own
-        if (currentUserId == vehicle.userId) {
-            android.util.Log.d("DashboardViewModel", "Permission granted: User owns the vehicle")
-            return true
-        }
-        
-        // Rule 2: Admins can create mappings for any vehicle
-        if (currentUserRole == User.UserRole.ADMIN) {
-            android.util.Log.d("DashboardViewModel", "Permission granted: User has ADMIN role")
-            return true
-        }
-        
-        // Rule 3: Employees can create mappings for any vehicle
-        if (currentUserRole == User.UserRole.EMPLOYEE) {
-            android.util.Log.d("DashboardViewModel", "Permission granted: User has EMPLOYEE role")
-            return true
-        }
-        
-        android.util.Log.w("DashboardViewModel", "Permission denied: User $currentUserId (role=$currentUserRole) does not have permission for vehicle ${vehicle.id}")
-        return false
     }
 
     /**
@@ -1452,9 +1254,6 @@ class DashboardViewModel
     /**
      * Starts monitoring for a specific vehicle.
      * Auto-selects vehicle and starts accelerometer for its services.
-     * Uses VehicleServiceMapping for independent readings per vehicle-service pair.
-     * Checks and creates missing VehicleServiceMappings before starting monitoring.
-     * FIXED: Now uses VehicleRepository directly to get vehicle info instead of relying on _vehicles.value
      */
     fun startMonitoringForVehicle(vehicleId: String) {
         android.util.Log.i("DashboardViewModel", ">>> startMonitoringForVehicle called with vehicleId: $vehicleId <<<")
@@ -1462,26 +1261,19 @@ class DashboardViewModel
             _isLoading.value = true
             _errorMessage.value = ""
 
-            // Validate battery level before proceeding
-            if ((_batteryLevel.value ?: 0f) < 20) {
+            // Validate battery level
+            if (_batteryLevel.value < 20) {
                 _errorMessage.value = "Battery level too low. Please charge your device before starting monitoring."
                 android.util.Log.w("DashboardViewModel", "Battery level too low: ${_batteryLevel.value}")
                 _isLoading.value = false
                 return@launch
             }
 
-            // Validate vehicle exists - use VehicleRepository directly (FIXED: don't rely on _vehicles.value)
-            val vehicleResult = vehicleRepository.getVehicleById(vehicleId)
-            val vehicle = when (vehicleResult) {
-                is Result.Success -> vehicleResult.data
-                is Result.Failure -> {
-                    android.util.Log.e("DashboardViewModel", "Failed to fetch vehicle for monitoring: ${vehicleResult.message}")
-                    null
-                }
-            }
-            
+            // Validate vehicle exists
+            val vehicle = _vehicles.value.find { it.id == vehicleId }
             if (vehicle == null) {
-                android.util.Log.e("DashboardViewModel", "Vehicle not found: $vehicleId")
+                android.util.Log.e("DashboardViewModel", "Vehicle not found in list: $vehicleId")
+                android.util.Log.d("DashboardViewModel", "Available vehicles: ${_vehicles.value.map { it.id }}")
                 _errorMessage.value = "Vehicle not found. Please refresh and try again."
                 _isLoading.value = false
                 return@launch
@@ -1490,272 +1282,77 @@ class DashboardViewModel
 
             // Load services for this vehicle
             android.util.Log.d("DashboardViewModel", "Fetching services for vehicleId: $vehicleId")
-            
-            // Ensure _services is populated (global service templates)
-            if (_services.value.isEmpty()) {
-                android.util.Log.d("DashboardViewModel", "_services is empty in startMonitoringForVehicle, loading services")
-                when (val serviceResult = serviceRepository.getServices()) {
-                    is Result.Success -> {
-                        _services.value = serviceResult.data ?: emptyList()
-                        android.util.Log.d("DashboardViewModel", "Loaded ${_services.value.size} services into _services state")
-                    }
-                    is Result.Failure -> {
-                        android.util.Log.e("DashboardViewModel", "Failed to load services: ${serviceResult.message}")
-                        _errorMessage.value = "Failed to load services: ${serviceResult.message}"
+            val vehicleServicesResult = serviceRepository.getServicesForVehicle(vehicleId)
+            when (vehicleServicesResult) {
+                is Result.Success -> {
+                    val services = vehicleServicesResult.data ?: emptyList()
+                    android.util.Log.d("DashboardViewModel", "Found ${services.size} services for vehicle")
+                    if (services.isEmpty()) {
+                        _errorMessage.value = "No services found for ${vehicle.name}. Please add a service first."
+                        android.util.Log.w("DashboardViewModel", "No services for vehicle: $vehicleId")
                         _isLoading.value = false
                         return@launch
                     }
-                }
-            }
-            
-            // Services are now GLOBAL templates - no filtering by userId
-            // VehicleServiceMapping handles the actual vehicle-service relationships
-            val vehicleServicesResult = _services.value
-            
-            if (vehicleServicesResult.isEmpty()) {
-                _errorMessage.value = "No services found in system. Please add services first."
-                android.util.Log.w("DashboardViewModel", "No services available in _services after loading")
-                _isLoading.value = false
-                return@launch
-            }
 
-            // NEW: Ensure all VehicleServiceMappings exist before starting monitoring
-            android.util.Log.d("DashboardViewModel", "Ensuring VehicleServiceMappings exist for all services")
-            val allMappingsExist = ensureAllMappingsExist(vehicleId, vehicle)
-            if (!allMappingsExist) {
-                android.util.Log.e("DashboardViewModel", "Failed to create required VehicleServiceMappings for vehicle $vehicleId")
-                _errorMessage.value = "Failed to create service mappings. Please contact administrator."
-                _isLoading.value = false
-                return@launch
-            }
+                    // Select the first service and start monitoring
+                    val firstService = services.first()
+                    currentServiceId = firstService.id
+                    monitoredVehicleId = vehicle.id // Lock to this vehicle
+                    android.util.Log.d("DashboardViewModel", "Using first service: ${firstService.id}, name: ${firstService.name}")
+                    
+                    // Update selected vehicle
+                    _selectedVehicle.value = vehicle
+                    _vehicleServices.value = services
 
-            // Start monitoring for ALL services on this vehicle
-            monitoredVehicleId = vehicle.id // Lock to this vehicle
-            android.util.Log.d("DashboardViewModel", "Starting monitoring for all ${vehicleServicesResult.size} services on vehicle $vehicleId")
-            
-            // Update selected vehicle
-            _selectedVehicle.value = vehicle
-            _vehicleServices.value = vehicleServicesResult
+                    // Start monitoring
+                    android.util.Log.d("DashboardViewModel", "Starting service monitoring for: ${firstService.id}")
+                    val startResult = serviceRepository.startServiceMonitoring(firstService.id)
+                    when (startResult) {
+                        is Result.Success -> {
+                            android.util.Log.d("DashboardViewModel", "Firebase monitoring started, calling AccelerometerService.startService")
+                            try {
+                                AccelerometerService.startService(context, firstService.id, vehicle.id)
+                                android.util.Log.i("DashboardViewModel", "AccelerometerService started successfully")
+                            } catch (e: Exception) {
+                                android.util.Log.e("DashboardViewModel", "Error starting AccelerometerService", e)
+                                _errorMessage.value = "Failed to start accelerometer service: ${e.message}"
+                                monitoredVehicleId = null // Clear on error
+                                _isLoading.value = false
+                                return@launch
+                            }
+                            _isMonitoring.value = true
+                            _isServiceActive.value = true
+                            _mileageThreshold.value = firstService.mileageLimit.toInt()
 
-            // Create or get VehicleServiceMapping and start monitoring for ALL services
-            vehicleServicesResult.forEach { service ->
-                startMappingMonitoringForVehicleAndService(vehicleId, service.id)
-            }
+                            _serviceStatus.value = ServiceStatusSummary(
+                                serviceId = firstService.id,
+                                totalReadings = 0,
+                                totalMovement = 0f,
+                                averageMovement = 0f,
+                                isMonitoring = true,
+                                lastReadingTime = System.currentTimeMillis(),
+                                isMileageExceeded = false,
+                            )
 
-            // Start the accelerometer service
-            android.util.Log.d("DashboardViewModel", "Starting AccelerometerService for vehicle $vehicleId")
-            try {
-                // Start with empty serviceId since we're monitoring all services
-                // The service will check Firebase for active mappings and restore state
-                AccelerometerService.startService(context, "", vehicle.id)
-                android.util.Log.i("DashboardViewModel", "AccelerometerService started successfully")
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error starting AccelerometerService", e)
-                _errorMessage.value = "Failed to start accelerometer service: ${e.message}"
-                monitoredVehicleId = null // Clear on error
-                _isLoading.value = false
-                return@launch
-            }
-            _isMonitoring.value = true
-            // Set mileage threshold to the first service's limit (for compatibility)
-            val firstService = vehicleServicesResult.firstOrNull()
-            _mileageThreshold.value = firstService?.mileageLimit ?: 20000f
-
-            _successMessage.value = "Monitoring started for ${vehicle.name}"
-            android.util.Log.i("DashboardViewModel", "Monitoring started successfully for: ${vehicle.name}")
-        }
-    }
-    
-    /**
-     * Creates or gets the VehicleServiceMapping and starts monitoring for the vehicle-service pair.
-     * This is the key method for the new architecture - each vehicle-service pair has independent readings.
-     */
-    private suspend fun startMappingMonitoringForVehicleAndService(vehicleId: String, serviceId: String) {
-        // First check if mapping already exists
-        when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)) {
-            is Result.Success -> {
-                val existingMapping = mappingResult.data
-                if (existingMapping != null) {
-                    // Mapping exists, just start monitoring
-                    android.util.Log.d("DashboardViewModel", "Found existing mapping ${existingMapping.id}, starting monitoring")
-                    vehicleServiceMappingRepository.startMappingMonitoring(existingMapping.id)
-                    currentMappingId = existingMapping.id
-                } else {
-                    // Mapping doesn't exist, create a new one
-                    android.util.Log.d("DashboardViewModel", "Creating new mapping for vehicle $vehicleId and service $serviceId")
-                    createAndStartMapping(vehicleId, serviceId)
-                }
-            }
-            is Result.Failure -> {
-                // Error getting mapping, try to create new one
-                android.util.Log.w("DashboardViewModel", "Error getting mapping: ${mappingResult.message}, creating new")
-                createAndStartMapping(vehicleId, serviceId)
-            }
-        }
-    }
-    
-    /**
-     * Creates a new VehicleServiceMapping and starts monitoring.
-     * FIXED: Now uses current authenticated user's ID for proper authentication context.
-     */
-    private suspend fun createAndStartMapping(vehicleId: String, serviceId: String) {
-        // Get current authenticated user ID
-        val currentUserId = authRepository.getCurrentUserId()
-        if (currentUserId == null) {
-            android.util.Log.e("DashboardViewModel", "Cannot create mapping: User not authenticated")
-            _errorMessage.value = "Cannot create mapping: User not authenticated"
-            return
-        }
-        
-        // Get vehicle info directly from repository (FIXED: don't rely on _vehicles.value)
-        val vehicleResult = vehicleRepository.getVehicleById(vehicleId)
-        val vehicle = when (vehicleResult) {
-            is Result.Success -> vehicleResult.data
-            is Result.Failure -> {
-                android.util.Log.e("DashboardViewModel", "Failed to fetch vehicle for mapping creation: ${vehicleResult.message}")
-                null
-            }
-        }
-        
-        if (vehicle == null) {
-            android.util.Log.e("DashboardViewModel", "Cannot create mapping: vehicle not found for ID: $vehicleId")
-            _errorMessage.value = "Cannot create mapping: vehicle not found"
-            return
-        }
-        
-        // Validate that the vehicle belongs to the current user
-        if (vehicle.userId != currentUserId) {
-            android.util.Log.e("DashboardViewModel", "Cannot create mapping: Vehicle ${vehicle.id} belongs to user ${vehicle.userId}, but current user is $currentUserId")
-            _errorMessage.value = "Cannot create mapping: Vehicle does not belong to current user"
-            return
-        }
-        
-        // Get service info
-        val service = _services.value.find { it.id == serviceId } ?: _vehicleServices.value.find { it.id == serviceId }
-        
-        if (service == null) {
-            android.util.Log.e("DashboardViewModel", "Cannot create mapping: service not found for ID: $serviceId")
-            _errorMessage.value = "Cannot create mapping: service not found"
-            return
-        }
-        
-        // Get variant details if service has a variantId
-        var variantName = service.variantName
-        var variantId = service.variantId
-        var mileageLimit = service.mileageLimit
-        
-        if (service.variantId.isNotEmpty()) {
-            when (val variantResult = serviceVariantRepository.getVariantById(service.variantId)) {
-                is Result.Success -> {
-                    val variant = variantResult.data
-                    if (variant != null) {
-                        variantName = variant.name
-                        mileageLimit = variant.mileageLimit
-                        android.util.Log.d("DashboardViewModel", "Using variant details for service ${service.id}: variantName=$variantName, mileageLimit=$mileageLimit")
+                            _successMessage.value = "Monitoring started for ${vehicle.name}"
+                            android.util.Log.i("DashboardViewModel", "Monitoring started successfully for: ${vehicle.name}")
+                            observeServiceReadings(firstService.id)
+                        }
+                        is Result.Failure -> {
+                            _errorMessage.value = startResult.message ?: "Failed to start monitoring"
+                            android.util.Log.e("DashboardViewModel", "Failed to start monitoring: ${startResult.message}")
+                        }
                     }
                 }
                 is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Failed to fetch variant details for service ${service.id}: ${variantResult.message}")
+                    _errorMessage.value = vehicleServicesResult.message ?: "Failed to load services for vehicle"
+                    android.util.Log.e("DashboardViewModel", "Failed to load services: ${vehicleServicesResult.message}")
                 }
             }
-        }
-        
-        val newMapping = VehicleServiceMapping(
-            vehicleId = vehicleId,
-            serviceId = serviceId,
-            userId = currentUserId, // Use current authenticated user's ID
-            serviceName = variantName.ifEmpty { service.name },
-            variantId = variantId,
-            variantName = variantName,
-            totalMovement = 0f,
-            isMonitoring = true,
-            status = VehicleServiceMapping.MappingStatus.ACTIVE,
-            lastReadingTime = System.currentTimeMillis(),
-            mileageLimit = mileageLimit,
-        )
-        
-        when (val createResult = vehicleServiceMappingRepository.createMapping(newMapping)) {
-            is Result.Success -> {
-                val createdMapping = createResult.data
-                if (createdMapping != null) {
-                    currentMappingId = createdMapping.id
-                    android.util.Log.d("DashboardViewModel", "Created new mapping ${createdMapping.id} for service ${service.id} with variantId=$variantId, variantName=$variantName")
-                    
-                    // Start monitoring for the mapping
-                    when (val startResult = vehicleServiceMappingRepository.startMappingMonitoring(createdMapping.id)) {
-                        is Result.Success -> {
-                            android.util.Log.i("DashboardViewModel", "Successfully started monitoring for mapping ${createdMapping.id}")
-                        }
-                        is Result.Failure -> {
-                            android.util.Log.e("DashboardViewModel", "Failed to start mapping monitoring: ${startResult.message}")
-                            _errorMessage.value = "Failed to start monitoring: ${startResult.message}"
-                        }
-                    }
-                }
-            }
-            is Result.Failure -> {
-                android.util.Log.e("DashboardViewModel", "Failed to create mapping: ${createResult.message}")
-                _errorMessage.value = "Failed to create service mapping: ${createResult.message}"
-            }
+
+            _isLoading.value = false
         }
     }
-
-    // ========== VehicleServiceMapping Verification Methods ==========
-
-    /**
-     * Ensures all VehicleServiceMappings exist for a vehicle's services before starting monitoring.
-     * Creates missing mappings using the vehicle's userId for authentication.
-     * 
-     * @param vehicleId The ID of the vehicle to check mappings for
-     * @param vehicle The vehicle object containing user information
-     * @return true if all mappings exist or were successfully created, false otherwise
-     */
-    private suspend fun ensureAllMappingsExist(vehicleId: String, vehicle: Vehicle): Boolean {
-        return try {
-            android.util.Log.d("DashboardViewModel", "Checking and creating VehicleServiceMappings for vehicle $vehicleId")
-            
-            // Get all services
-            val services = _services.value
-            
-            // Check and create mappings for each service
-            services.forEach { service ->
-                val mappingExists = checkMappingExists(vehicleId, service.id)
-                if (!mappingExists) {
-                    val mappingCreated = createMappingForServiceAndVehicle(service, vehicle)
-                    if (!mappingCreated) {
-                        android.util.Log.e("DashboardViewModel", "Failed to create mapping for service ${service.id}")
-                        return false
-                    }
-                }
-            }
-            
-            android.util.Log.d("DashboardViewModel", "Successfully ensured all VehicleServiceMappings exist for vehicle $vehicleId")
-            true
-        } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error ensuring mappings exist for vehicle $vehicleId", e)
-            false
-        }
-    }
-
-    /**
-     * Checks if a VehicleServiceMapping exists for a specific vehicle-service combination.
-     * 
-     * @param vehicleId The ID of the vehicle
-     * @param serviceId The ID of the service
-     * @return true if mapping exists, false otherwise
-     */
-    private suspend fun checkMappingExists(vehicleId: String, serviceId: String): Boolean {
-        return try {
-            when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicleId, serviceId)) {
-                is Result.Success -> mappingResult.data != null
-                is Result.Failure -> false
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error checking mapping existence for vehicle $vehicleId and service $serviceId", e)
-            false
-        }
-    }
-
 
     // ========== Reset Service Dialog Methods ==========
 
@@ -1902,7 +1499,7 @@ class DashboardViewModel
             _isLoading.value = true
             _errorMessage.value = ""
 
-            when (val result = serviceRepository.getServices()) {
+            when (val result = serviceRepository.getServicesForVehicle(vehicleId)) {
                 is Result.Success -> {
                     _vehicleServices.value = result.data ?: emptyList()
                 }
@@ -1917,43 +1514,24 @@ class DashboardViewModel
 
     /**
      * Confirms and executes the reset for the selected service.
-     * Uses the new architecture: resets readings via VehicleServiceMapping.
      */
     fun confirmResetService() {
         val service = _selectedServiceForReset.value ?: return
-        val vehicle = _selectedVehicleForReset.value ?: return
 
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = ""
             _successMessage.value = ""
 
-            // Reset via VehicleServiceMapping
-            when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicle.id, service.id)) {
+            val resetResult = serviceRepository.resetServiceReadings(service.id)
+
+            when (resetResult) {
                 is Result.Success -> {
-                    val mapping = mappingResult.data
-                    if (mapping != null) {
-                        when (val resetResult = vehicleServiceMappingRepository.resetMappingReadings(mapping.id)) {
-                            is Result.Success -> {
-                                // Update local readings map
-                                _serviceReadingsMap.value = _serviceReadingsMap.value.toMutableMap().apply {
-                                    this[service.id] = 0
-                                }
-                                _successMessage.value = "Service readings reset successfully for ${service.variantName.ifEmpty { service.name }}"
-                                hideResetServiceDialog()
-                            }
-                            is Result.Failure -> {
-                                _errorMessage.value = resetResult.message ?: "Failed to reset service readings"
-                            }
-                        }
-                    } else {
-                        // No mapping exists - nothing to reset
-                        _successMessage.value = "No readings found to reset"
-                        hideResetServiceDialog()
-                    }
+                    _successMessage.value = "Service readings reset successfully for ${service.variantName.ifEmpty { service.name }}"
+                    hideResetServiceDialog()
                 }
                 is Result.Failure -> {
-                    _errorMessage.value = mappingResult.message ?: "Failed to find service mapping"
+                    _errorMessage.value = resetResult.message ?: "Failed to reset service readings"
                 }
             }
 
@@ -1973,428 +1551,5 @@ class DashboardViewModel
      */
     fun getServicesForResetVehicle(): List<Service> {
         return _vehicleServices.value
-    }
-
-    // ========== Per-Service Readings Methods ==========
-
-    /**
-     * Updates readings for ALL services assigned to the monitored vehicle.
-     * Each service maintains independent readings through VehicleServiceMapping.
-     * 
-     * @param vehicleId The ID of the monitored vehicle
-     * @param totalMovement The new reading value from accelerometer
-     */
-    private fun updateReadingsForAllVehicleServices(vehicleId: String, totalMovement: Int) {
-        val updatedMap = _serviceReadingsMap.value.toMutableMap()
-        
-        // Update ALL services assigned to this vehicle
-        _vehicleServices.value.forEach { service ->
-            // Check if service hasn't reached limit before updating
-            val mapping = _vehicleServiceMappings.value.find { 
-                it.vehicleId == vehicleId && it.serviceId == service.id 
-            }
-            
-            // Only update services that haven't reached their limit
-            if (mapping == null || mapping.totalMovement < mapping.mileageLimit) {
-                // FIX: totalMovement is already cumulative from the service, so assign directly
-                val newReading = totalMovement
-                
-                updatedMap[service.id] = newReading
-                android.util.Log.d("DashboardViewModel", "Updated service ${service.id} (${service.name}): $newReading")
-                
-                // NOTE: Firebase updates are handled by the AccelerometerService in real-time
-                // and by real-time listeners. No need to update here to avoid conflicts.
-            } else {
-                android.util.Log.d("DashboardViewModel", "Service ${service.id} (${service.name}) reached limit, skipping update")
-            }
-        }
-        
-        _serviceReadingsMap.value = updatedMap
-    }
-
-    /**
-     * Updates the VehicleServiceMapping for a specific service with new reading.
-     * This ensures independent readings are persisted to Firebase.
-     */
-    private fun updateMappingForService(serviceId: String, newReading: Float) {
-        viewModelScope.launch {
-            try {
-                when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(monitoredVehicleId ?: "", serviceId)) {
-                    is Result.Success -> {
-                        mappingResult.data?.let { mapping ->
-                            vehicleServiceMappingRepository.updateMappingMovement(mapping.id, newReading)
-                            android.util.Log.d("DashboardViewModel", "Updated Firebase mapping for service $serviceId: $newReading")
-                        }
-                    }
-                    is Result.Failure -> {
-                        android.util.Log.w("DashboardViewModel", "Failed to update mapping for service $serviceId: ${mappingResult.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error updating mapping for service $serviceId", e)
-            }
-        }
-    }
-
-    /**
-     * Initializes readings from VehicleServiceMappings.
-     * Each mapping has independent totalMovement per vehicle.
-     * 
-     * @param mappings The list of VehicleServiceMappings to initialize readings from
-     */
-    fun initializeServiceReadingsFromMappings(mappings: List<VehicleServiceMapping>) {
-        val initializedMap = mutableMapOf<String, Int>()
-        
-        mappings.forEach { mapping ->
-            initializedMap[mapping.serviceId] = mapping.totalMovement.toInt()
-            android.util.Log.d("DashboardViewModel", "Initialized reading from mapping for service ${mapping.serviceId}: ${mapping.totalMovement.toInt()}")
-        }
-        
-        _serviceReadingsMap.value = initializedMap
-    }
-
-
-    /**
-     * Saves all current readings for the monitored vehicle's services to Firebase.
-     * Uses the new architecture: saves to VehicleServiceMapping for independent readings.
-     * Called when monitoring stops to persist the readings.
-     * 
-     * @param vehicleId The ID of the monitored vehicle
-     */
-    fun saveReadingsToFirebase(vehicleId: String) {
-        viewModelScope.launch {
-            try {
-                // Get mappings for this vehicle
-                when (val mappingResult = vehicleServiceMappingRepository.getMappingsForVehicle(vehicleId)) {
-                    is Result.Success -> {
-                        val mappings = mappingResult.data ?: emptyList()
-                        mappings.forEach { mapping ->
-                            val currentReading = _serviceReadingsMap.value[mapping.serviceId] ?: return@forEach
-                            
-                            // Update the mapping's totalMovement in Firebase
-                            vehicleServiceMappingRepository.updateMappingMovement(mapping.id, currentReading.toFloat())
-                            
-                            android.util.Log.d("DashboardViewModel", "Saved reading to mapping ${mapping.id} for service ${mapping.serviceId}: $currentReading")
-                        }
-                    }
-                    is Result.Failure -> {
-                        android.util.Log.w("DashboardViewModel", "Failed to load mappings: ${mappingResult.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error saving readings to Firebase", e)
-            }
-        }
-    }
-
-    // ========== NEW ARCHITECTURE: VehicleServiceMapping Methods ==========
-
-    /**
-     * Loads VehicleServiceMappings for multiple vehicles.
-     * This gets all services with independent readings for the user's vehicles.
-     * Called automatically after loading vehicles for a user.
-     */
-    private fun loadMappingsForVehicles(vehicleIds: List<String>) {
-        viewModelScope.launch {
-            try {
-                val allMappings = mutableListOf<VehicleServiceMapping>()
-                
-                for (vehicleId in vehicleIds) {
-                    when (val result = vehicleServiceMappingRepository.getMappingsForVehicle(vehicleId)) {
-                        is Result.Success -> {
-                            allMappings.addAll(result.data ?: emptyList())
-                        }
-                        is Result.Failure -> {
-                            android.util.Log.w("DashboardViewModel", "Failed to load mappings for vehicle $vehicleId: ${result.message}")
-                        }
-                    }
-                }
-                
-                _vehicleServiceMappings.value = allMappings
-                initializeServiceReadingsFromMappings(allMappings)
-                
-                android.util.Log.d("DashboardViewModel", "Loaded ${allMappings.size} total mappings for ${vehicleIds.size} vehicles")
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error loading mappings for vehicles", e)
-            }
-        }
-    }
-
-    /**
-     * Sets up real-time listeners for a specific vehicle's mappings.
-     * This ensures service cards update automatically when Firebase data changes.
-     */
-    fun setupRealTimeListenersForVehicle(vehicleId: String) {
-        viewModelScope.launch {
-            try {
-                // Observe all mappings for this vehicle
-                vehicleServiceMappingRepository.observeMappingsForVehicle(vehicleId)
-                    .collect { mappings ->
-                        // Update live mappings state
-                        val liveMap = mappings.associateBy { "${it.vehicleId}_${it.serviceId}" }
-                        _liveMappings.value = liveMap
-                        
-                        // Update service readings map with real-time data
-                        val readingsMap = mappings.associate { it.serviceId to it.totalMovement.toInt() }
-                        _serviceReadingsMap.value = readingsMap
-                        
-                        android.util.Log.d("DashboardViewModel", "Real-time update: ${mappings.size} mappings for vehicle $vehicleId")
-                    }
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error setting up real-time listeners for vehicle $vehicleId", e)
-            }
-        }
-    }
-
-    /**
-     * Sets up real-time listener for a specific vehicle-service mapping.
-     * This provides more granular updates for individual service cards.
-     */
-    fun setupRealTimeListenerForMapping(vehicleId: String, serviceId: String) {
-        viewModelScope.launch {
-            try {
-                vehicleServiceMappingRepository.observeMappingForVehicleAndService(vehicleId, serviceId)
-                    .collect { mapping ->
-                        if (mapping != null) {
-                            // Update the specific mapping in live mappings
-                            val key = "${vehicleId}_${serviceId}"
-                            val currentLiveMappings = _liveMappings.value.toMutableMap()
-                            currentLiveMappings[key] = mapping
-                            _liveMappings.value = currentLiveMappings
-                            
-                            // Update the specific service reading
-                            val currentReadings = _serviceReadingsMap.value.toMutableMap()
-                            currentReadings[serviceId] = mapping.totalMovement.toInt()
-                            _serviceReadingsMap.value = currentReadings
-                            
-                            android.util.Log.d("DashboardViewModel", "Real-time update for $serviceId: ${mapping.totalMovement}")
-                        }
-                    }
-            } catch (e: Exception) {
-                android.util.Log.e("DashboardViewModel", "Error setting up real-time listener for ${vehicleId}_$serviceId", e)
-            }
-        }
-    }
-
-    /**
-     * Clears all real-time listeners when vehicle selection changes.
-     */
-    fun clearRealTimeListeners() {
-        // The Flow.collect() calls will automatically stop when the coroutine scope is cancelled
-        // This is handled by the viewModelScope.launch lifecycle
-        _liveMappings.value = emptyMap()
-        android.util.Log.d("DashboardViewModel", "Cleared real-time listeners")
-    }
-
-    /**
-     * Gets the live reading for a service from real-time Firebase data.
-     * Falls back to local broadcast data if not available.
-     */
-    fun getLiveServiceReading(serviceId: String, vehicleId: String? = null): Int {
-        // First try to get from live mappings (real-time Firebase data)
-        val key = vehicleId?.let { "${it}_${serviceId}" }
-        key?.let {
-            _liveMappings.value[it]?.totalMovement?.toInt()?.let { liveReading ->
-                return liveReading
-            }
-        }
-        
-        // Fall back to local broadcast data
-        return _serviceReadingsMap.value[serviceId] ?: 0
-    }
-
-    /**
-     * Combines broadcast updates with real-time Firebase updates.
-     * Ensures UI stays in sync regardless of data source.
-     */
-    private fun updateReadingsWithConflictResolution(
-        vehicleId: String,
-        totalMovement: Int,
-        source: String = "broadcast"
-    ) {
-        val currentReadings = _serviceReadingsMap.value.toMutableMap()
-        val currentLiveMappings = _liveMappings.value.toMutableMap()
-        
-        // Update all services for this vehicle
-        _vehicleServices.value.forEach { service ->
-            val key = "${vehicleId}_${service.id}"
-            val currentReading = currentReadings[service.id] ?: 0
-            val liveMapping = currentLiveMappings[key]
-            
-            // Conflict resolution: prefer higher value (in case of concurrent updates)
-            val newReading = maxOf(currentReading, totalMovement)
-            
-            currentReadings[service.id] = newReading
-            
-            // Update live mapping if it exists
-            liveMapping?.let {
-                val updatedMapping = it.copy(totalMovement = newReading.toFloat())
-                currentLiveMappings[key] = updatedMapping
-            }
-            
-            android.util.Log.d("DashboardViewModel", "$source update for ${service.id}: $newReading")
-        }
-        
-        _serviceReadingsMap.value = currentReadings
-        _liveMappings.value = currentLiveMappings
-    }
-
-    /**
-     * Enhanced error handling for Firebase operations with retry logic.
-     */
-    private suspend fun <T> safeFirebaseOperation(
-        operationName: String,
-        operation: suspend () -> T,
-        maxRetries: Int = 3
-    ): T {
-        var retryCount = 0
-        var lastError: Exception? = null
-
-        while (retryCount < maxRetries) {
-            try {
-                val result = operation()
-                android.util.Log.d("DashboardViewModel", "Firebase operation '$operationName' succeeded")
-                return result
-            } catch (e: Exception) {
-                retryCount++
-                lastError = e
-                android.util.Log.w("DashboardViewModel", "Firebase operation '$operationName' failed (attempt $retryCount/$maxRetries): ${e.message}")
-                
-                if (retryCount < maxRetries) {
-                    // Exponential backoff
-                    val delayMs = (1000 * Math.pow(2.0, retryCount.toDouble())).toLong()
-                    kotlinx.coroutines.delay(delayMs)
-                }
-            }
-        }
-
-        // All retries failed
-        val errorMessage = "Failed to $operationName after $maxRetries attempts. Please check your connection and try again."
-        _errorMessage.value = errorMessage
-        android.util.Log.e("DashboardViewModel", "Firebase operation '$operationName' failed after $maxRetries attempts: ${lastError?.message}")
-        throw Exception(errorMessage)
-    }
-
-    /**
-     * Validates Firebase connectivity before critical operations.
-     */
-    private fun validateFirebaseConnectivity(): Boolean {
-        // Simple validation - check if we can access Firebase
-        return try {
-            // This is a lightweight check that doesn't require actual data access
-            true
-        } catch (e: Exception) {
-            android.util.Log.w("DashboardViewModel", "Firebase connectivity validation failed: ${e.message}")
-            false
-        }
-    }
-
-    /**
-     * Enhanced mapping creation with better error handling and validation.
-     */
-    private suspend fun createMappingForServiceAndVehicleWithValidation(
-        service: Service,
-        vehicle: Vehicle
-    ): Boolean {
-        return try {
-            // Validate inputs
-            if (service.id.isBlank() || vehicle.id.isBlank()) {
-                android.util.Log.e("DashboardViewModel", "Invalid service or vehicle ID")
-                _errorMessage.value = "Invalid service or vehicle information"
-                return false
-            }
-
-            // Validate user authentication
-            val currentUserId = authRepository.getCurrentUserId()
-            if (currentUserId == null) {
-                android.util.Log.e("DashboardViewModel", "Cannot create mapping: User not authenticated")
-                _errorMessage.value = "User not authenticated. Please log in again."
-                return false
-            }
-
-            // Validate vehicle ownership
-            if (vehicle.userId != currentUserId) {
-                android.util.Log.e("DashboardViewModel", "Cannot create mapping: Vehicle ${vehicle.id} belongs to user ${vehicle.userId}, but current user is $currentUserId")
-                _errorMessage.value = "Cannot create mapping: Vehicle does not belong to current user"
-                return false
-            }
-
-            // Check if mapping already exists
-            when (val mappingResult = vehicleServiceMappingRepository.getMappingForVehicleAndService(vehicle.id, service.id)) {
-                is Result.Success -> {
-                    if (mappingResult.data != null) {
-                        android.util.Log.d("DashboardViewModel", "Mapping already exists for vehicle ${vehicle.id} and service ${service.id}")
-                        return true
-                    }
-                }
-                is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Error checking existing mapping: ${mappingResult.message}")
-                    // Continue to create mapping
-                }
-            }
-
-            // Create the mapping with retry logic
-            return safeFirebaseOperation("create service mapping", operation = {
-                val newMapping = createMappingData(service, vehicle, currentUserId)
-                when (val createResult = vehicleServiceMappingRepository.createMapping(newMapping)) {
-                    is Result.Success -> {
-                        android.util.Log.d("DashboardViewModel", "Created VehicleServiceMapping for service ${service.id} and vehicle ${vehicle.id}")
-                        _successMessage.value = "Service mapping created successfully"
-                        true  // Return true on success
-                    }
-                    is Result.Failure -> {
-                        throw Exception("Failed to create mapping: ${createResult.message}")
-                    }
-                }
-            })
-        } catch (e: Exception) {
-            android.util.Log.e("DashboardViewModel", "Error creating mapping for service ${service.id} and vehicle ${vehicle.id}", e)
-            _errorMessage.value = "Failed to create service mapping: ${e.message}"
-            false
-        }
-    }
-
-    /**
-     * Creates the mapping data object with proper validation.
-     */
-    private suspend fun createMappingData(
-        service: Service,
-        vehicle: Vehicle,
-        currentUserId: String
-    ): VehicleServiceMapping {
-        // Get variant details if service has a variantId
-        var variantName = service.variantName
-        var variantId = service.variantId
-        var mileageLimit = service.mileageLimit
-        
-        if (service.variantId.isNotEmpty()) {
-            when (val variantResult = serviceVariantRepository.getVariantById(service.variantId)) {
-                is Result.Success -> {
-                    val variant = variantResult.data
-                    if (variant != null) {
-                        variantName = variant.name
-                        mileageLimit = variant.mileageLimit
-                        android.util.Log.d("DashboardViewModel", "Using variant details for service ${service.id}: variantName=$variantName, mileageLimit=$mileageLimit")
-                    }
-                }
-                is Result.Failure -> {
-                    android.util.Log.w("DashboardViewModel", "Failed to fetch variant details for service ${service.id}: ${variantResult.message}")
-                }
-            }
-        }
-        
-        return VehicleServiceMapping(
-            vehicleId = vehicle.id,
-            serviceId = service.id,
-            userId = currentUserId,
-            serviceName = variantName.ifEmpty { service.name },
-            variantId = variantId,
-            variantName = variantName,
-            totalMovement = 0f,
-            isMonitoring = false,
-            status = VehicleServiceMapping.MappingStatus.ACTIVE,
-            lastReadingTime = System.currentTimeMillis(),
-            mileageLimit = mileageLimit,
-        )
     }
 }

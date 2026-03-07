@@ -1,6 +1,5 @@
 package com.mainlert.data.repositories
 
-import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
@@ -85,9 +84,6 @@ class FirebaseAuthRepositoryImpl
                 if (userDoc.exists()) {
                     val user = userDoc.toObject(User::class.java) ?: throw Exception("User data not found")
 
-                    // Cache user role for synchronous access
-                    cacheUserRole(firebaseUser.uid, user.role)
-
                     // Update last login time
                     usersCollection.document(firebaseUser.uid).update(
                         mapOf("lastLoginAt" to System.currentTimeMillis()),
@@ -140,9 +136,7 @@ class FirebaseAuthRepositoryImpl
          */
         override suspend fun logout(): Result<Unit> {
             return try {
-                val userId = auth.currentUser?.uid
                 auth.signOut()
-                userId?.let { clearCachedUserRole(it) }
                 Result.Success(Unit)
             } catch (e: Exception) {
                 Result.Failure(e.message ?: "Logout failed")
@@ -174,7 +168,8 @@ class FirebaseAuthRepositoryImpl
                         // Use callback to fetch user data
                         usersCollection.document(user.uid).get().addOnSuccessListener { userDoc ->
                             if (userDoc.exists()) {
-                                // User data changed, but we can't emit from callback
+                                val userData = userDoc.toObject(User::class.java)
+                                // Can't emit directly from callback, so we'll ignore this for now
                                 // In a real app, use callbackFlow to handle this properly
                             }
                         }
@@ -190,51 +185,19 @@ class FirebaseAuthRepositoryImpl
             return auth.currentUser != null
         }
 
-    /**
-     * Gets the current user's role.
-     * Caches the role during login flow and provides synchronous access.
-     */
-    override fun getCurrentUserRole(): User.UserRole? {
-        val currentUser = auth.currentUser
-        return if (currentUser != null) {
-            // Check if we have a cached role from login
-            val cachedRole = getCachedUserRole(currentUser.uid)
-            cachedRole ?: User.UserRole.DRIVER // Fallback to DRIVER if cache unavailable
-        } else {
-            null
+        /**
+         * Gets the current user's role.
+         */
+        override fun getCurrentUserRole(): User.UserRole? {
+            val currentUser = auth.currentUser
+            return if (currentUser != null) {
+                // For immediate access, we might need to fetch from cache or return a default
+                // In a real app, you'd want to cache this or fetch it asynchronously
+                User.UserRole.DRIVER // Default role for immediate access
+            } else {
+                null
+            }
         }
-    }
-    
-    /**
-     * Cache for storing user roles to avoid synchronous Firestore queries.
-     * This is populated during login flow.
-     */
-    private val userRoleCache = mutableMapOf<String, User.UserRole>()
-    
-    /**
-     * Gets cached user role if available.
-     */
-    private fun getCachedUserRole(userId: String): User.UserRole? {
-        return userRoleCache[userId]
-    }
-    
-    /**
-     * Caches a user's role for synchronous access.
-     */
-    private fun cacheUserRole(userId: String, role: User.UserRole) {
-        userRoleCache[userId] = role
-    }
-    
-    /**
-     * Clears cached user role (on logout or role change).
-     */
-    private fun clearCachedUserRole(userId: String) {
-        userRoleCache.remove(userId)
-    }
-
-    override fun getCurrentUserId(): String? {
-        return auth.currentUser?.uid
-    }
 
         /**
          * Sends a password reset email to the specified email address.

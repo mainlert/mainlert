@@ -1,31 +1,19 @@
 package com.mainlert.di
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.mainlert.data.local.LocalDatabase
-import com.mainlert.data.local.conflict.ConflictResolver
-import com.mainlert.data.local.network.NetworkMonitor
 import com.mainlert.data.repositories.AuthRepository
 import com.mainlert.data.repositories.FirebaseAuthRepositoryImpl
-import com.mainlert.data.repositories.FirebaseLockRepositoryImpl
-import com.mainlert.data.repositories.LockRepository
-import com.mainlert.data.repositories.LocalServiceRepositoryImpl
-import com.mainlert.data.repositories.LocalServiceVariantRepositoryImpl
-import com.mainlert.data.repositories.LocalVehicleRepositoryImpl
-import com.mainlert.data.repositories.LocalVehicleServiceMappingRepositoryImpl
+import com.mainlert.data.repositories.FirebaseServiceRepositoryImpl
+import com.mainlert.data.repositories.FirebaseServiceVariantRepositoryImpl
+import com.mainlert.data.repositories.FirebaseVehicleRepositoryImpl
 import com.mainlert.data.repositories.ServiceRepository
 import com.mainlert.data.repositories.ServiceVariantRepository
 import com.mainlert.data.repositories.VehicleRepository
-import com.mainlert.data.repositories.VehicleServiceMappingRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 /**
@@ -39,30 +27,22 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class RepositoryModule {
+abstract class FirebaseModule {
     @Binds
     @Singleton
-    abstract fun bindAuthRepository(firebaseAuthRepositoryImpl: FirebaseAuthRepositoryImpl): AuthRepository
+    abstract fun bindFirebaseAuthRepository(firebaseAuthRepositoryImpl: FirebaseAuthRepositoryImpl): AuthRepository
 
     @Binds
     @Singleton
-    abstract fun bindVehicleRepository(localVehicleRepositoryImpl: LocalVehicleRepositoryImpl): VehicleRepository
+    abstract fun bindFirebaseServiceRepository(firebaseServiceRepositoryImpl: FirebaseServiceRepositoryImpl): ServiceRepository
 
     @Binds
     @Singleton
-    abstract fun bindServiceRepository(localServiceRepositoryImpl: LocalServiceRepositoryImpl): ServiceRepository
+    abstract fun bindFirebaseVehicleRepository(firebaseVehicleRepositoryImpl: FirebaseVehicleRepositoryImpl): VehicleRepository
 
     @Binds
     @Singleton
-    abstract fun bindServiceVariantRepository(localServiceVariantRepositoryImpl: LocalServiceVariantRepositoryImpl): ServiceVariantRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindVehicleServiceMappingRepository(localVehicleServiceMappingRepositoryImpl: LocalVehicleServiceMappingRepositoryImpl): VehicleServiceMappingRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindLockRepository(firebaseLockRepositoryImpl: FirebaseLockRepositoryImpl): LockRepository
+    abstract fun bindFirebaseServiceVariantRepository(firebaseServiceVariantRepositoryImpl: FirebaseServiceVariantRepositoryImpl): ServiceVariantRepository
 }
 
 @Module
@@ -73,46 +53,4 @@ object FirebaseAuthModule {
     fun provideFirebaseAuth(): FirebaseAuth {
         return FirebaseAuth.getInstance()
     }
-    
-    @Provides
-    @Singleton
-    fun provideFirebaseFirestore(): FirebaseFirestore {
-        return FirebaseFirestore.getInstance()
-    }
-    
-    @Provides
-    @Singleton
-    fun provideLocalDatabase(
-        @ApplicationContext context: android.content.Context
-    ): LocalDatabase {
-        return androidx.room.Room.databaseBuilder(
-            context,
-            LocalDatabase::class.java,
-            "mainlert_database"
-        ).addMigrations(
-            LocalDatabase.MIGRATION_1_2,
-            LocalDatabase.MIGRATION_2_3
-        ).build()
-    }
-    
-    @Provides
-    @Singleton
-    fun provideCoroutineScope(): CoroutineScope {
-        return CoroutineScope(Dispatchers.IO + SupervisorJob())
-    }
-    
-    @Provides
-    @Singleton
-    fun provideConflictResolver(): ConflictResolver {
-        return ConflictResolver()
-    }
-    
-    @Provides
-    @Singleton
-    fun provideNetworkMonitor(
-        @ApplicationContext context: android.content.Context
-    ): NetworkMonitor {
-        return NetworkMonitor(context)
-    }
 }
-

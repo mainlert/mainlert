@@ -58,7 +58,4 @@
     <string name="about">Acerca de</string>
     <string name="version">Versión 1.0</string>
     <string name="app_description">Gestión de servicio de vehículos con monitoreo inteligente</string>
-    <string name="lifetime_mileage">Kilometraje total</string>
-    <string name="initial_mileage">Kilometraje inicial</string>
-    <string name="initial_mileage_hint">Ingrese la lectura del odómetro actual</string>
 </resources>
