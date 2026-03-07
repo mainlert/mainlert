@@ -198,18 +198,12 @@ fun serviceManagementScreen(
                                                 serviceName,
                                                 serviceDescription,
                                                 mileageLimit,
-                                                "",
-                                                selectedVariant?.id ?: "",
-                                                selectedVariant?.name ?: "Standard",
                                             )
                                         } else {
                                             dashboardViewModel.createService(
                                                 serviceName,
                                                 serviceDescription,
                                                 mileageLimit,
-                                                "",
-                                                selectedVariant?.id ?: "",
-                                                selectedVariant?.name ?: "Standard",
                                             )
                                         }
                                         isCreatingService = false
@@ -348,7 +342,7 @@ fun ServiceVariantDropdown(
                         Column {
                             Text(variant.name)
                             Text(
-                                text = "Limit: ${variant.mileageLimit.toInt()}",
+                                text = "Limit: ${variant.mileageLimit}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             )
@@ -439,7 +433,7 @@ fun SimpleServiceItem(
                         style = MaterialTheme.typography.labelSmall,
                     )
                     Text(
-                        text = "${service.mileageLimit.toInt()}",
+                        text = "${service.mileageLimit}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary,
                     )

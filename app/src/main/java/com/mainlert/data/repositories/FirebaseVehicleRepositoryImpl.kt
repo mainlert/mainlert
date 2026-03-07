@@ -146,9 +146,30 @@ class FirebaseVehicleRepositoryImpl
 
     override suspend fun assignVehicleToDriver(vehicleId: String, driverId: String): Result<Unit> {
         return try {
+            // First, get the current driver to find their previous vehicle (if any)
+            val usersCollection = firestore.collection("users")
+            val driverDoc = usersCollection.document(driverId).get().await()
+            
+            // Update vehicle's userId
             vehiclesCollection.document(vehicleId).update(
                 mapOf("userId" to driverId),
             ).await()
+            
+            // Also update the driver's vehicleIds list
+            if (driverDoc.exists()) {
+                val driverData = driverDoc.data
+                @Suppress("UNCHECKED_CAST")
+                val currentVehicleIds = driverData?.get("vehicleIds") as? List<String> ?: emptyList()
+                
+                // Only add if not already in the list
+                if (!currentVehicleIds.contains(vehicleId)) {
+                    val updatedVehicleIds = currentVehicleIds + vehicleId
+                    usersCollection.document(driverId).update(
+                        mapOf("vehicleIds" to updatedVehicleIds)
+                    ).await()
+                }
+            }
+            
             Result.Success(Unit)
         } catch (e: FirebaseFirestoreException) {
             Result.Failure("Firestore error: ${e.message}")
@@ -159,9 +180,33 @@ class FirebaseVehicleRepositoryImpl
 
     override suspend fun removeVehicleFromDriver(vehicleId: String): Result<Unit> {
         return try {
+            val usersCollection = firestore.collection("users")
+            
+            // First, get the vehicle to find the current driver
+            val vehicleDoc = vehiclesCollection.document(vehicleId).get().await()
+            val currentDriverId = vehicleDoc.getString("userId") ?: ""
+            
+            // Update vehicle's userId to empty
             vehiclesCollection.document(vehicleId).update(
                 mapOf("userId" to ""),
             ).await()
+            
+            // If there was a driver assigned, remove the vehicle from their vehicleIds list
+            if (currentDriverId.isNotEmpty()) {
+                val driverDoc = usersCollection.document(currentDriverId).get().await()
+                if (driverDoc.exists()) {
+                    val driverData = driverDoc.data
+                    @Suppress("UNCHECKED_CAST")
+                    val currentVehicleIds = driverData?.get("vehicleIds") as? List<String> ?: emptyList()
+                    
+                    // Remove the vehicleId from the list
+                    val updatedVehicleIds = currentVehicleIds.filter { it != vehicleId }
+                    usersCollection.document(currentDriverId).update(
+                        mapOf("vehicleIds" to updatedVehicleIds)
+                    ).await()
+                }
+            }
+            
             Result.Success(Unit)
         } catch (e: FirebaseFirestoreException) {
             Result.Failure("Firestore error: ${e.message}")
@@ -196,6 +241,8 @@ class FirebaseVehicleRepositoryImpl
 
     override suspend fun createVehicleForDriver(
         vehicleName: String,
+        model: String,
+        year: Int,
         plateNumber: String,
         driverId: String,
         employeeId: String,
@@ -205,6 +252,8 @@ class FirebaseVehicleRepositoryImpl
             val vehicle =
                 Vehicle(
                     name = vehicleName,
+                    model = model,
+                    year = year,
                     plateNumber = plateNumber,
                     userId = driverId,
                     employeeId = employeeId,
@@ -262,6 +311,35 @@ class FirebaseVehicleRepositoryImpl
             awaitClose {
                 listener.remove()
             }
+        }
+    }
+
+    override suspend fun updateVehicleLifetimeMileage(vehicleId: String, mileage: Float): Result<Vehicle> {
+        return try {
+            val document = vehiclesCollection.document(vehicleId).get().await()
+
+            if (document.exists()) {
+                val currentVehicle = document.toObject(Vehicle::class.java)
+                if (currentVehicle != null) {
+                    // Get current lifetime mileage and add the new mileage to it
+                    val currentLifetimeMileage = currentVehicle.lifetimeMileage
+                    val updatedLifetimeMileage = currentLifetimeMileage + mileage
+
+                    vehiclesCollection.document(vehicleId).update(
+                        mapOf("lifetimeMileage" to updatedLifetimeMileage)
+                    ).await()
+
+                    Result.Success(currentVehicle.copy(lifetimeMileage = updatedLifetimeMileage))
+                } else {
+                    Result.Failure("Failed to parse vehicle data")
+                }
+            } else {
+                Result.Failure("Vehicle not found")
+            }
+        } catch (e: FirebaseFirestoreException) {
+            Result.Failure("Firestore error: ${e.message}")
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to update vehicle lifetime mileage")
         }
     }
 }

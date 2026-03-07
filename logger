@@ -1,66 +1,895 @@
 ========================================
 MainLert Logcat Session
-Started: Wed Feb 11 11:08:42 PM GMT 2026
+Started: Fri Mar  6 09:15:22 AM GMT 2026
 Package: com.mainlert.mainlertapp
-Device: emulator-5554
+Device: 192.168.0.104:5555
 Log Level: V
 ========================================
 
-[2026-02-11 23:09:12] 02-11 23:08:48.019   981  1747 D ArcAppLauncherService: Request app icon: com.mainlert.ui.SplashActivity/32
-[2026-02-11 23:09:12] 02-11 23:08:48.073   981  1747 D ArcAppLauncherService: Request app icon: com.mainlert.ui.SplashActivity/64
-[2026-02-11 23:09:12] 02-11 23:08:49.651   414   526 D ArcQosManager: Task created: 815 - ComponentInfo{com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity} .
-[2026-02-11 23:09:12] 02-11 23:08:49.659   981  2300 D ArcAppTaskTracker: Task created: 815 - ComponentInfo{com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity} .
-[2026-02-11 23:09:12] 02-11 23:08:49.867   162   162 D wayland-service: Creating app window for task_id 815 from package 'com.mainlert.mainlertapp' with remote shell
-[2026-02-11 23:09:12] 02-11 23:08:50.145   162   178 D wayland-service: Moving task_id 815 from package 'com.mainlert.mainlertapp' to front
-[2026-02-11 23:09:12] 02-11 23:08:50.146   162   178 D wayland-service: Activating window for task_id 815 from package 'com.mainlert.mainlertapp
-[2026-02-11 23:09:12] 02-11 23:08:50.433 20575 20679 I SplashActivity: Admin user initialization completed successfully
-[2026-02-11 23:09:12] 02-11 23:08:50.698   414   429 W ziparchive: Unable to open '/data/app/~~KVM8aceziZo_bCge2C_4cA==/com.mainlert.mainlertapp-4NYnEtOZ1T5MeeZxPTyk8w==/base.dm': No such file or directory
-[2026-02-11 23:09:12] 02-11 23:08:50.720   414   429 I ActivityTaskManager: Displayed com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity: +1s131ms
-[2026-02-11 23:09:12] 02-11 23:08:51.110   414   823 W InputManager-JNI: Input channel object '1af32ef Splash Screen com.mainlert.mainlertapp (client)' was disposed without first being removed with the input manager!
-[2026-02-11 23:09:12] 02-11 23:08:51.118   414   427 D CoreBackPreview: Window{1af32ef u0 Splash Screen com.mainlert.mainlertapp EXITING}: Setting back callback null
-[2026-02-11 23:09:12] 02-11 23:08:53.147   414   755 I ActivityTaskManager: START u0 {cmp=com.mainlert.mainlertapp/com.mainlert.ui.MainActivity} from uid 10187
-[2026-02-11 23:09:12] 02-11 23:08:53.855   414   429 I ActivityTaskManager: Displayed com.mainlert.mainlertapp/com.mainlert.ui.MainActivity: +695ms
-[2026-02-11 23:09:12] 02-11 23:08:54.639   414   755 D CoreBackPreview: Window{ba91600 u0 com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity}: Setting back callback null
-[2026-02-11 23:09:12] 02-11 23:08:54.644   414   755 W InputManager-JNI: Input channel object 'ba91600 com.mainlert.mainlertapp/com.mainlert.ui.SplashActivity (client)' was disposed without first being removed with the input manager!
-[2026-02-11 23:09:12] 02-11 23:08:54.770 20575 20575 D DashboardViewModel: Accelerometer receiver registered
-[2026-02-11 23:09:12] 02-11 23:09:10.312   414   427 D ConnectivityService: requestNetwork for uid/pid:10187/20575 activeRequest: null callbackRequest: 1158 [NetworkRequest [ REQUEST id=1159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10187 RequestorUid: 10187 RequestorPkg: com.mainlert.mainlertapp UnderlyingNetworks: Null] ]] callback flags: 0 order: 2147483647
-[2026-02-11 23:09:12] 02-11 23:09:10.314   414   526 D ArcWifiFactory(eth5): got request NetworkRequest [ REQUEST id=1159, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VCN_MANAGED Uid: 10187 RequestorUid: 10187 RequestorPkg: com.mainlert.mainlertapp UnderlyingNetworks: Null] ]
-[2026-02-11 23:09:12] 02-11 23:09:10.353 20575 20575 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=false <<<
-[2026-02-11 23:09:12] 02-11 23:09:10.706 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6030): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:12] 02-11 23:09:10.714 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6031): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:12] 02-11 23:09:10.716 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6032): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6033): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6034): avc: denied { read } for name="vendor" dev="sysfs" ino=11461 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:25] 02-11 23:09:10.717 20575 20575 W Chrome_InProcGp: type=1400 audit(0.0:6035): avc: denied { read } for name="device" dev="sysfs" ino=11460 scontext=u:r:untrusted_app:s0:c187,c256,c512,c768 tcontext=u:object_r:sysfs:s0 tclass=file permissive=0 app=com.mainlert.mainlertapp
-[2026-02-11 23:09:25] 02-11 23:09:15.013 20575 20575 D RoundedButton: >>> Button onClick lambda executed <<<
-[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 D Dashboard: >>> BUTTON CLICKED! isMonitoring=false <<<
-[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 D Dashboard: >>> Calling onToggleMonitoring()
-[2026-02-11 23:09:26] 02-11 23:09:15.013 20575 20575 I DashboardViewModel: >>> START BUTTON CLICKED <<<
-[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D DashboardViewModel: Vehicle count: 3
-[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D DashboardViewModel: Multiple vehicles (3), showing selection dialog
-[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D Dashboard: >>> Calling onInteraction()
-[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D Dashboard: >>> Button handler complete
-[2026-02-11 23:09:26] 02-11 23:09:15.014 20575 20575 D RoundedButton: >>> Button onClick lambda complete <<<
-[2026-02-11 23:09:26] 02-11 23:09:15.146 20575 20575 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=false <<<
-[2026-02-11 23:09:26] 02-11 23:09:15.773   414   506 I InputDispatcher: Not sending motion to 894d00a com.mainlert.mainlertapp/com.mainlert.ui.MainActivity, window opacity=0.071228 is below the threshold
-[2026-02-11 23:09:26] 02-11 23:09:23.155 20575 20575 I DashboardViewModel: >>> startMonitoringForVehicle called with vehicleId: aHr8YRYB3PaYZcIk9xcX <<<
-[2026-02-11 23:09:26] 02-11 23:09:23.162 20575 20575 D DashboardViewModel: Found vehicle: Dorflix
-[2026-02-11 23:09:26] 02-11 23:09:23.162 20575 20575 D DashboardViewModel: Fetching services for vehicleId: aHr8YRYB3PaYZcIk9xcX
-[2026-02-11 23:09:26] 02-11 23:09:23.249   414   755 D CoreBackPreview: Window{894d00a u0 com.mainlert.mainlertapp/com.mainlert.ui.MainActivity}: Setting back callback null
-[2026-02-11 23:09:26] 02-11 23:09:23.318   414   755 W InputManager-JNI: Input channel object '894d00a com.mainlert.mainlertapp/com.mainlert.ui.MainActivity (client)' was disposed without first being removed with the input manager!
-[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Found 1 services for vehicle
-[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Using first service: I6dsNjkzs2RJBafh96L5, name: Engine oil & oil filter change
-[2026-02-11 23:09:26] 02-11 23:09:23.567 20575 20575 D DashboardViewModel: Starting service monitoring for: I6dsNjkzs2RJBafh96L5
-[2026-02-11 23:09:26] 02-11 23:09:24.265 20575 20575 D DashboardViewModel: Firebase monitoring started, calling AccelerometerService.startService
-[2026-02-11 23:09:26] 02-11 23:09:24.289 20575 20575 I DashboardViewModel: AccelerometerService started successfully
-[2026-02-11 23:09:26] 02-11 23:09:24.291 20575 20575 I DashboardViewModel: Monitoring started successfully for: Dorflix
-[2026-02-11 23:09:26] 02-11 23:09:24.304 20575 20575 I AccelerometerService: >>> onStartCommand called with action: com.mainlert.mainlertapp.START_MONITORING
-[2026-02-11 23:09:26] 02-11 23:09:24.304 20575 20575 I AccelerometerService: START_MONITORING received, serviceId: I6dsNjkzs2RJBafh96L5
-[2026-02-11 23:09:26] 02-11 23:09:24.307 20575 20575 I AccelerometerService: >>> startMonitoring() called
-[2026-02-11 23:09:26] 02-11 23:09:24.307 20575 20575 D AccelerometerService: Creating foreground notification...
-[2026-02-11 23:09:26] 02-11 23:09:24.336 20575 20575 D AccelerometerService: Starting foreground service...
-[2026-02-11 23:09:26] 02-11 23:09:24.339 20575 20575 I AccelerometerService: Foreground notification started
-[2026-02-11 23:09:26] 02-11 23:09:24.339 20575 20575 D AccelerometerService: Registering accelerometer sensor: CrosEC Accelerometer
-[2026-02-11 23:09:26] 02-11 23:09:24.355 20575 20575 I AccelerometerService: Accelerometer sensor registered successfully
-[2026-02-11 23:09:26] 02-11 23:09:24.377 20575 20575 D AccelerometerService: Broadcast sent: true, totalMovement=9.463061
-[2026-02-11 23:09:26] 02-11 23:09:24.377 20575 20575 D DashboardViewModel: Updated readings: x=-1.1336538, y=-1.0594336, z=9.334986
+[2026-03-06 09:15:26] 03-06 09:15:24.180 12783 12783 D DashboardScreen: Vehicle selected: Toyota Camry
+[2026-03-06 09:15:26] 03-06 09:15:24.180 12783 12783 D DashboardViewModel: Vehicle selected for monitoring: Toyota Camry
+[2026-03-06 09:15:26] 03-06 09:15:24.180 12783 12783 I DashboardViewModel: >>> startMonitoringForVehicle called with vehicleId: eBp61Fv9J62XIEXAREYK <<<
+[2026-03-06 09:15:26] 03-06 09:15:24.215 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:26] 03-06 09:15:24.308 12783 12783 D DashboardScreen: showVehicleSelectionDialog changed to: false
+[2026-03-06 09:15:26] 03-06 09:15:24.333   924   924 I GoogleInputMethodServic: GoogleInputMethodService.onStartInput():1986 onStartInput(EditorInfo{EditorInfo{packageName=com.mainlert.mainlertapp, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+[2026-03-06 09:15:26] 03-06 09:15:24.502 12783 12783 D DashboardViewModel: Found vehicle: Toyota Camry
+[2026-03-06 09:15:26] 03-06 09:15:24.502 12783 12783 D DashboardViewModel: Fetching services for vehicleId: eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:26] 03-06 09:15:24.503 12783 12783 D DashboardViewModel: Ensuring VehicleServiceMappings exist for all services
+[2026-03-06 09:15:26] 03-06 09:15:24.503 12783 12783 D DashboardViewModel: Checking and creating VehicleServiceMappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:26] 03-06 09:15:24.951 12783 12783 D DashboardViewModel: Successfully ensured all VehicleServiceMappings exist for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:26] 03-06 09:15:24.951 12783 12783 D DashboardViewModel: Starting monitoring for all 1 services on vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:25.278 12783 12783 D DashboardViewModel: Found existing mapping 0Nmv15FEHmm9oFQHsO9I, starting monitoring
+[2026-03-06 09:15:27] 03-06 09:15:25.360 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:25.995 12783 12783 D DashboardViewModel: Starting AccelerometerService for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:26.042 12783 12783 I DashboardViewModel: AccelerometerService started successfully
+[2026-03-06 09:15:27] 03-06 09:15:26.043 12783 12783 I DashboardViewModel: Monitoring started successfully for: Toyota Camry
+[2026-03-06 09:15:27] 03-06 09:15:26.097  3650  3671 D ApplicationPolicy: isStatusBarNotificationAllowedAsUser: packageName = com.mainlert.mainlertapp,userId = 0
+[2026-03-06 09:15:27] 03-06 09:15:26.103 12783 12783 I AccelerometerService: >>> onStartCommand called with action: com.mainlert.mainlertapp.START_MONITORING
+[2026-03-06 09:15:27] 03-06 09:15:26.103 12783 12783 I AccelerometerService: START_MONITORING received, serviceId: null, vehicleId: eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:26.103 12783 12783 D AccelerometerService: No current mapping, performing synchronous restoration check...
+[2026-03-06 09:15:27] 03-06 09:15:26.105 12783 12833 D AccelerometerService: Checking for active mapping in Firebase...
+[2026-03-06 09:15:27] 03-06 09:15:26.111  4023  4023 D PhoneStatusBar: addNotification key=0|com.mainlert.mainlertapp|1|null|10677
+[2026-03-06 09:15:27] 03-06 09:15:26.182  4023  4023 D PhoneStatusBar: No Fullscreen intent: 0|com.mainlert.mainlertapp|1|null|10677 isHeadsUped : false
+[2026-03-06 09:15:27] 03-06 09:15:26.514 12783 12833 I AccelerometerService: Found active mapping: vehicleId=eBp61Fv9J62XIEXAREYK, serviceId=elZnaf9TyxhelTgFOWjj
+[2026-03-06 09:15:27] 03-06 09:15:26.514 12783 12833 I AccelerometerService: Restored service state from Firebase. Starting monitoring...
+[2026-03-06 09:15:27] 03-06 09:15:26.515 12783 12833 D AccelerometerService: Starting Firebase data loading...
+[2026-03-06 09:15:27] 03-06 09:15:26.518 12783 12835 D AccelerometerService: Loading RemoteConfig thresholds...
+[2026-03-06 09:15:27] 03-06 09:15:26.518 12783 12783 I AccelerometerService: Active mapping restored (currentMappingId=0Nmv15FEHmm9oFQHsO9I), monitoring is active
+[2026-03-06 09:15:27] 03-06 09:15:26.521 12783 12835 D AccelerometerService: Successfully loaded RemoteConfig thresholds: crashThreshold=3.0, minThreshold=0.5
+[2026-03-06 09:15:27] 03-06 09:15:26.521 12783 12835 D AccelerometerService: Loading VehicleServiceMapping for service elZnaf9TyxhelTgFOWjj and vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:26.521 12783 12835 D AccelerometerService: Using currentMappingId from restore: 0Nmv15FEHmm9oFQHsO9I
+[2026-03-06 09:15:27] 03-06 09:15:26.636 12783 12783 I AccelerometerService: Internet connection restored, retrying Firebase loading...
+[2026-03-06 09:15:27] 03-06 09:15:26.636 12783 12783 D AccelerometerService: Starting Firebase data loading...
+[2026-03-06 09:15:27] 03-06 09:15:26.639 12783 12835 D AccelerometerService: Loading RemoteConfig thresholds...
+[2026-03-06 09:15:27] 03-06 09:15:26.641 12783 12835 D AccelerometerService: Successfully loaded RemoteConfig thresholds: crashThreshold=3.0, minThreshold=0.5
+[2026-03-06 09:15:27] 03-06 09:15:26.641 12783 12835 D AccelerometerService: Loading VehicleServiceMapping for service elZnaf9TyxhelTgFOWjj and vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:26.641 12783 12835 D AccelerometerService: Using currentMappingId from restore: 0Nmv15FEHmm9oFQHsO9I
+[2026-03-06 09:15:27] 03-06 09:15:26.872 12783 12835 I AccelerometerService: Found existing mapping: 0Nmv15FEHmm9oFQHsO9I
+[2026-03-06 09:15:27] 03-06 09:15:26.873 12783 12834 I AccelerometerService: Found existing mapping: 0Nmv15FEHmm9oFQHsO9I
+[2026-03-06 09:15:27] 03-06 09:15:27.218 12783 12834 D AccelerometerService: Successfully loaded vehicle lifetime mileage: 0.0
+[2026-03-06 09:15:27] 03-06 09:15:27.218 12783 12834 I AccelerometerService: Firebase data loaded successfully. Starting monitoring...
+[2026-03-06 09:15:27] 03-06 09:15:27.219 12783 12834 I AccelerometerService: >>> startMonitoring() called
+[2026-03-06 09:15:27] 03-06 09:15:27.221 12783 12835 D AccelerometerService: Successfully loaded vehicle lifetime mileage: 0.0
+[2026-03-06 09:15:27] 03-06 09:15:27.221 12783 12835 I AccelerometerService: Firebase data loaded successfully. Starting monitoring...
+[2026-03-06 09:15:27] 03-06 09:15:27.221 12783 12835 I AccelerometerService: >>> startMonitoring() called
+[2026-03-06 09:15:27] 03-06 09:15:27.221 12783 12834 D AccelerometerService: Loaded thresholds from RemoteConfig: crashThreshold=3.0, minThreshold=0.5
+[2026-03-06 09:15:27] 03-06 09:15:27.221 12783 12834 D AccelerometerService: Creating foreground notification...
+[2026-03-06 09:15:27] 03-06 09:15:27.222 12783 12834 D AccelerometerService: Starting foreground service...
+[2026-03-06 09:15:27] 03-06 09:15:27.223 12783 12835 D AccelerometerService: Loaded thresholds from RemoteConfig: crashThreshold=3.0, minThreshold=0.5
+[2026-03-06 09:15:27] 03-06 09:15:27.223 12783 12835 D AccelerometerService: Creating foreground notification...
+[2026-03-06 09:15:27] 03-06 09:15:27.224 12783 12835 D AccelerometerService: Starting foreground service...
+[2026-03-06 09:15:27] 03-06 09:15:27.225 12783 12834 I AccelerometerService: Foreground notification started
+[2026-03-06 09:15:27] 03-06 09:15:27.225 12783 12834 D AccelerometerService: Registering accelerometer sensor: MPU6500 Acceleration Sensor
+[2026-03-06 09:15:27] 03-06 09:15:27.225  3650  3671 D ApplicationPolicy: isStatusBarNotificationAllowedAsUser: packageName = com.mainlert.mainlertapp,userId = 0
+[2026-03-06 09:15:27] 03-06 09:15:27.229 12783 12835 I AccelerometerService: Foreground notification started
+[2026-03-06 09:15:27] 03-06 09:15:27.230 12783 12835 D AccelerometerService: Registering accelerometer sensor: MPU6500 Acceleration Sensor
+[2026-03-06 09:15:27] 03-06 09:15:27.237  3650  3671 D ApplicationPolicy: isStatusBarNotificationAllowedAsUser: packageName = com.mainlert.mainlertapp,userId = 0
+[2026-03-06 09:15:27] 03-06 09:15:27.245 12783 12834 I AccelerometerService: Monitoring started: serviceId=elZnaf9TyxhelTgFOWjj, vehicleId=eBp61Fv9J62XIEXAREYK, mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=0.0
+[2026-03-06 09:15:27] 03-06 09:15:27.246 12783 12835 I AccelerometerService: Monitoring started: serviceId=elZnaf9TyxhelTgFOWjj, vehicleId=eBp61Fv9J62XIEXAREYK, mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=0.0
+[2026-03-06 09:15:27] 03-06 09:15:27.260 12783 12783 D AccelerometerService: Sensor accuracy changed: MPU6500 Acceleration Sensor -> 3
+[2026-03-06 09:15:27] 03-06 09:15:27.262 12783 12835 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=8.031171
+[2026-03-06 09:15:27] 03-06 09:15:27.264 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=8.031171, magnitude=8.031171, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:27.265 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 8
+[2026-03-06 09:15:27] 03-06 09:15:27.268 12783 12783 D DashboardViewModel: Updated readings: x=-0.022984337, y=-0.021068975, z=8.031111, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:27] 03-06 09:15:27.325 12783 12834 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=14.426397
+[2026-03-06 09:15:28] 03-06 09:15:27.333 12783 12833 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=19.551197
+[2026-03-06 09:15:28] 03-06 09:15:27.337 12783 12834 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=23.639545
+[2026-03-06 09:15:28] 03-06 09:15:27.350 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=26.915981
+[2026-03-06 09:15:28] 03-06 09:15:27.366 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=29.557308
+[2026-03-06 09:15:28] 03-06 09:15:27.385 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.388 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=31.677015
+[2026-03-06 09:15:28] 03-06 09:15:27.417 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.419 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=33.35468
+[2026-03-06 09:15:28] 03-06 09:15:27.429 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=34.70348
+[2026-03-06 09:15:28] 03-06 09:15:27.445 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.452 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=35.79304
+[2026-03-06 09:15:28] 03-06 09:15:27.465 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.473 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=36.663788
+[2026-03-06 09:15:28] 03-06 09:15:27.496 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.497 12783 13008 D AccelerometerService: Attempting Firebase update: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=37.35176
+[2026-03-06 09:15:28] 03-06 09:15:27.527 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.528 12783 12783 D AccelerometerService: Not vehicle movement - skipping Firebase update
+[2026-03-06 09:15:28] 03-06 09:15:27.552 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.577 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.605 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.630 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.653 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.672 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=8.031171
+[2026-03-06 09:15:28] 03-06 09:15:27.682 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.771 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.035347767, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.772 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:28] 03-06 09:15:27.778 12783 12783 D DashboardViewModel: Updated readings: x=-0.014707351, y=-0.012338607, z=0.029680252, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:28] 03-06 09:15:27.856 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=14.426397
+[2026-03-06 09:15:28] 03-06 09:15:27.875 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=19.551197
+[2026-03-06 09:15:28] 03-06 09:15:27.890 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=23.639545
+[2026-03-06 09:15:28] 03-06 09:15:27.906 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=26.915981
+[2026-03-06 09:15:31] 03-06 09:15:27.926 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=29.557308
+[2026-03-06 09:15:31] 03-06 09:15:27.946 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=31.677015
+[2026-03-06 09:15:31] 03-06 09:15:27.966 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=33.35468
+[2026-03-06 09:15:31] 03-06 09:15:27.984 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=34.70348
+[2026-03-06 09:15:31] 03-06 09:15:28.072 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.184 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=35.79304
+[2026-03-06 09:15:31] 03-06 09:15:28.202 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=36.663788
+[2026-03-06 09:15:31] 03-06 09:15:28.223 12783 13008 I AccelerometerService: Firebase mapping updated successfully: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=37.35176
+[2026-03-06 09:15:31] 03-06 09:15:28.286 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.011051314, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.288 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:31] 03-06 09:15:28.301 12783 12783 D DashboardViewModel: Updated readings: x=-0.005555004, y=0.009369645, z=-0.0018663406, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.383 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 8.0
+[2026-03-06 09:15:31] 03-06 09:15:28.454 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.475 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.772 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:31] 03-06 09:15:28.795 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.019082587, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.797 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:31] 03-06 09:15:28.800 12783 12783 D DashboardViewModel: Updated readings: x=0.003881503, y=-0.013964092, z=-0.012413025, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:28.913 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:31] 03-06 09:15:29.301 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:29.302 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.017292565, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:29.305 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:31] 03-06 09:15:29.308 12783 12783 D DashboardViewModel: Updated readings: x=-0.013157714, y=0.0066239946, z=-0.009057045, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:29.704 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:31] 03-06 09:15:29.782 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:29.821 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.003470178, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:29.852 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:31] 03-06 09:15:29.854 12783 12783 D DashboardViewModel: Updated readings: x=6.160429E-4, y=-0.0014277063, z=0.0031023026, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:30.086 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:31] 03-06 09:15:30.326 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:31] 03-06 09:15:30.328 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.023771323, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:30.611 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:34] 03-06 09:15:30.833 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.013407167, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:30.835 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:34] 03-06 09:15:30.841 12783 12783 D DashboardViewModel: Updated readings: x=0.0038563516, y=0.0020300522, z=0.0126791, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.358 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.016092265, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.359 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 74
+[2026-03-06 09:15:34] 03-06 09:15:31.362 12783 12783 D DashboardViewModel: Updated readings: x=-0.0055389926, y=-0.014194157, z=0.005177498, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.466 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.495 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.809 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:34] 03-06 09:15:31.855 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 74.0
+[2026-03-06 09:15:34] 03-06 09:15:31.874 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.012433827, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:31.874 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:34] 03-06 09:15:31.878 12783 12783 D DashboardViewModel: Updated readings: x=-0.0076481123, y=0.0070911655, z=-0.0067691803, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.382 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.383 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.020963548, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.385 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:34] 03-06 09:15:32.387 12783 12783 D DashboardViewModel: Updated readings: x=0.008767745, y=-0.006687738, z=0.017828941, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.790 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:34] 03-06 09:15:32.852 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.883 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.020734625, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:32.887 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:34] 03-06 09:15:32.889 12783 12783 D DashboardViewModel: Updated readings: x=-0.017759668, y=-0.0049032327, z=-0.009511948, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:33.177 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:34] 03-06 09:15:33.339 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:33.400 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.035931163, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:33.400 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:34] 03-06 09:15:33.402 12783 12783 D DashboardViewModel: Updated readings: x=-0.009732641, y=0.0034612964, z=0.03441429, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:33.647 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:34] 03-06 09:15:33.874 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:34] 03-06 09:15:33.903 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.023236312, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:33.935 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:35] 03-06 09:15:33.937 12783 12783 D DashboardViewModel: Updated readings: x=0.007099443, y=-0.017777616, z=0.013171196, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:34.190 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:35] 03-06 09:15:34.331 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:34.423 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.011625579, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:34.695 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:34.705 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:35] 03-06 09:15:34.785 12783 12789 I art     : Compiler allocated 9MB to compile void com.mainlert.ui.screens.DashboardScreenKt.InactivityOverlay(androidx.compose.ui.Modifier, java.util.List, com.mainlert.data.models.Vehicle, kotlin.Triple, boolean, boolean, java.util.Map, kotlin.jvm.functions.Function0, kotlin.jvm.functions.Function0, kotlin.jvm.functions.Function0, androidx.compose.runtime.Composer, int, int)
+[2026-03-06 09:15:35] 03-06 09:15:34.834 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:35] 03-06 09:15:34.910 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:34.914 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:34.928 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:34.932 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.0125080785, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:34.933 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:35] 03-06 09:15:34.935 12783 12783 D DashboardViewModel: Updated readings: x=0.007577272, y=-0.0071622333, z=0.0069093704, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:34.968 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:34.973 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:35] 03-06 09:15:35.030 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.046 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.062 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.079 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.097 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.116 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.146 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.163 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.171 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.181 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.197 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.214 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.231 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.252 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.267 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.285 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.306 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.315 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.331 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.351 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:35.382 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.385 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:35] 03-06 09:15:35.434 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.446 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.020861842, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:35.447 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:35] 03-06 09:15:35.448 12783 12783 D DashboardViewModel: Updated readings: x=0.0037443284, y=0.0051035415, z=0.019878387, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:35] 03-06 09:15:35.458 12783 12789 I art     : Compiler allocated 4MB to compile void com.mainlert.ui.screens.DashboardScreenKt$dashboardScreen$9$4$3.invoke(androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, int)
+[2026-03-06 09:15:35] 03-06 09:15:35.479 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.484 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:35] 03-06 09:15:35.560 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.572 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.584 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.601 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.617 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.634 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.651 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.682 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.687 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:35] 03-06 09:15:35.692 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.703 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.720 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.737 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.752 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.769 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:35] 03-06 09:15:35.786 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.808 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.820 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.845 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:35.868 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.875 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:36] 03-06 09:15:35.937 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.954 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:35.957 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.032937646, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:35.957 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:36] 03-06 09:15:35.958 12783 12783 D DashboardViewModel: Updated readings: x=-0.021040097, y=0.0014531072, z=-0.025300026, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:35.996 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.001 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:36] 03-06 09:15:36.082 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.093 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.107 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.121 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.138 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.150 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:36] 03-06 09:15:36.156 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.175 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.197 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.207 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.223 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.240 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.257 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.275 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.292 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.308 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.325 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.341 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.358 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.375 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.392 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:36.414 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.416 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:36] 03-06 09:15:36.458 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.0067734625, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:36.459 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.466 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:36] 03-06 09:15:36.468 12783 12783 D DashboardViewModel: Updated readings: x=-2.6788376E-4, y=-0.0024094274, z=-0.006324768, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:36] 03-06 09:15:36.500 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.504 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:36] 03-06 09:15:36.544 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.575 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.593 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.609 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.627 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.648 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.665 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.684 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.698 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.703 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:36] 03-06 09:15:36.712 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.728 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.745 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.761 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.779 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.795 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.812 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.830 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.851 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.865 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.883 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.897 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.915 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.931 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:36] 03-06 09:15:36.966 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:37] 03-06 09:15:36.967 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.026009751, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:37] 03-06 09:15:36.984 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:36.985 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:37] 03-06 09:15:37.008 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:37] 03-06 09:15:37.009 12783 12783 D DashboardViewModel: Updated readings: x=0.02080944, y=-0.011694498, z=0.0103302, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:37] 03-06 09:15:37.047 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.050 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:37] 03-06 09:15:37.107 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.114 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.152 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.164 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.181 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.200 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.219 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.237 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.253 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.267 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.275 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:37] 03-06 09:15:37.284 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.300 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.316 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.333 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.350 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.368 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.384 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.413 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:37] 03-06 09:15:37.439 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.446 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:37] 03-06 09:15:37.473 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.022494694, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:37] 03-06 09:15:37.488 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.500 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.517 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:37] 03-06 09:15:37.534 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.552 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.572 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.589 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.614 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.620 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.636 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.654 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.670 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.687 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.707 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.721 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.727 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:38] 03-06 09:15:37.738 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.755 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.771 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.787 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.804 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.821 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.847 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.890 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.949 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:37.987 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.000 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.015304712, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:38] 03-06 09:15:38.046 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.051 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:38] 03-06 09:15:38.053 12783 12783 D DashboardViewModel: Updated readings: x=0.0019603148, y=0.010042948, z=-0.011381149, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:38] 03-06 09:15:38.095 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.099 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:38] 03-06 09:15:38.177 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.186 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.190 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.207 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.225 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.241 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.261 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.288 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.300 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.314 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.325 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.342 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.359 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.376 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.394 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.411 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.427 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:38] 03-06 09:15:38.445 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.461 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.478 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.495 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.507 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.00935966, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:38.512 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.530 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.544 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.577 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:38.601 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.603 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:39] 03-06 09:15:38.642 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.649 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.661 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.678 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.695 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.712 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.733 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.758 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.774 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.781 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.797 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.814 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.831 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.849 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.855 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:39] 03-06 09:15:38.865 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.881 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.898 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.915 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.931 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.948 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.966 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.982 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:38.999 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.016 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.020 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.037894756, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:39.021 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:39] 03-06 09:15:39.025 12783 12783 D DashboardViewModel: Updated readings: x=0.006484166, y=-0.016128922, z=-0.033672333, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:39.068 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.074 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:39] 03-06 09:15:39.129 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.135 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.149 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.165 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.182 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.200 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.218 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.242 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.257 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.267 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.284 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.301 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.318 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.336 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.356 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.370 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.386 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.402 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.420 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.436 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.453 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.488 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:39.515 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.517 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:39] 03-06 09:15:39.545 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.022171564, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:39.568 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.575 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:39] 03-06 09:15:39.577 12783 12783 D DashboardViewModel: Updated readings: x=0.01256912, y=-0.002073536, z=-0.018146515, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:39] 03-06 09:15:39.601 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.604 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:39] 03-06 09:15:39.629 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.653 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.678 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.687 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.705 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.722 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.738 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.756 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.775 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.784 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:39] 03-06 09:15:39.791 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.808 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.823 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.840 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.856 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:39] 03-06 09:15:39.872 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.890 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.908 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.926 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.945 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.960 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.978 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:39.991 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.008 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.024 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.043 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.046 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.014327754, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:40] 03-06 09:15:40.066 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:40] 03-06 09:15:40.093 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.095 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:40] 03-06 09:15:40.134 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.142 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.159 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.175 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.192 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.213 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.229 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.247 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.261 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.277 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.294 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.313 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.328 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.346 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.362 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.378 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.389 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:40] 03-06 09:15:40.395 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.412 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:40] 03-06 09:15:40.428 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.445 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.461 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.478 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.496 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.513 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.530 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.549 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.557 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.006509429, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:40.559 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:41] 03-06 09:15:40.566 12783 12783 D DashboardViewModel: Updated readings: x=4.300475E-4, y=-0.006205612, z=-0.001917839, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:40.623 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.626 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:41] 03-06 09:15:40.667 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.679 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.696 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.713 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.730 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.748 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.766 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.781 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.798 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.815 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.831 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.851 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.866 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.883 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.900 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.917 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.933 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.950 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.967 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:40.986 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.000 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.030 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:41.044 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.045 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:41] 03-06 09:15:41.064 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.014764212, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:41.081 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.087 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:41] 03-06 09:15:41.088 12783 12783 D DashboardViewModel: Updated readings: x=-0.0043404885, y=0.0119760055, z=0.007464409, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:41.100 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.102 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:41] 03-06 09:15:41.130 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.150 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.167 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.202 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.218 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.234 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.252 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.269 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.286 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.302 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.318 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:41] 03-06 09:15:41.320 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.336 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.353 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.369 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.388 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.403 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.420 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.442 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:41] 03-06 09:15:41.459 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.461 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:41] 03-06 09:15:41.496 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:41] 03-06 09:15:41.503 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.520 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.537 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.554 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.571 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.575 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.009930784, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:42] 03-06 09:15:41.588 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.605 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.622 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.639 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.655 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.672 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.689 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.706 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.723 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.734 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:42] 03-06 09:15:41.740 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.756 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.773 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.790 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.807 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.824 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.840 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.857 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.874 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.891 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.908 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.925 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.941 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.958 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.975 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:41.992 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.009 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.025 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.043 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.059 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.076 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.084 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.012228296, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:42] 03-06 09:15:42.085 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:42] 03-06 09:15:42.087 12783 12783 D DashboardViewModel: Updated readings: x=-0.00825965, y=-0.008653546, z=0.0025348663, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:42] 03-06 09:15:42.114 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.118 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:42] 03-06 09:15:42.161 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.176 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.193 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.210 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.231 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.248 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.264 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.292 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.300 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.313 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.330 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.347 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.363 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.383 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.399 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.415 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.432 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.450 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.468 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.481 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.498 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.515 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.530 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.551 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:42] 03-06 09:15:42.566 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:42] 03-06 09:15:42.567 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:43] 03-06 09:15:42.589 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.0126476865, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:43] 03-06 09:15:42.602 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.607 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:43] 03-06 09:15:42.608 12783 12783 D DashboardViewModel: Updated readings: x=0.00730831, y=-0.0013707066, z=-0.010231018, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:43] 03-06 09:15:42.623 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.625 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:43] 03-06 09:15:42.651 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.668 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.681 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.697 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.727 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.733 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.750 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.769 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.784 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.802 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.818 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.829 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:43] 03-06 09:15:42.834 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.851 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.867 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.884 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.900 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.917 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.934 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.951 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.969 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:42.986 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.002 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.020 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.036 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.053 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.078 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:43] 03-06 09:15:43.098 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.100 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:43] 03-06 09:15:43.125 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.009245541, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:43] 03-06 09:15:43.140 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.145 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:43] 03-06 09:15:43.146 12783 12783 D DashboardViewModel: Updated readings: x=-0.004078755, y=-0.0028860103, z=-0.0077791214, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:43] 03-06 09:15:43.162 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.163 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:43] 03-06 09:15:43.190 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.207 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.219 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.236 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.258 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.270 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.287 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.306 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.324 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.341 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.358 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.373 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.376 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:43] 03-06 09:15:43.389 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.406 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.423 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.440 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.457 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.473 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.490 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.507 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.525 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.542 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.562 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.578 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:43] 03-06 09:15:43.591 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.608 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.625 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.638 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.025163407, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:43.641 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.678 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:43.699 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.700 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:44] 03-06 09:15:43.741 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.758 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.775 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.792 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.810 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.829 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.861 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.881 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.893 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.910 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.932 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.945 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.949 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:44] 03-06 09:15:43.963 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.978 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:43.995 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.012 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.028 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.044 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.061 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.081 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.096 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.112 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.130 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.146 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.151 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.012326478, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:44.152 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:44] 03-06 09:15:44.157 12783 12783 D DashboardViewModel: Updated readings: x=-0.0028145257, y=0.0056031784, z=-0.010612488, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:44.206 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.210 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:44] 03-06 09:15:44.253 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.262 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.279 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.297 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.313 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.332 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.349 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.376 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.382 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.398 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.415 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.439 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.449 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.466 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.483 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.503 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.517 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.534 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.550 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.567 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.584 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.600 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.632 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:44.653 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.654 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:44] 03-06 09:15:44.675 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.010985152, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:44.691 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.698 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:44] 03-06 09:15:44.699 12783 12783 D DashboardViewModel: Updated readings: x=-0.0038732272, y=-0.0036491354, z=0.009610176, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:44] 03-06 09:15:44.710 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.712 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:44] 03-06 09:15:44.737 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.758 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.767 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.784 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.813 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:44] 03-06 09:15:44.819 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.835 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.853 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.872 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.890 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.907 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.916 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:45] 03-06 09:15:44.921 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.937 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.953 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.970 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:44.987 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.007 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.023 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.039 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.055 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.072 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.088 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.110 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.122 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.138 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.165 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:45] 03-06 09:15:45.179 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.181 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:45] 03-06 09:15:45.198 12783 12783 D AccelerometerService: Broadcast sent: true, totalMovement=37.898308, magnitude=0.020892363, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:45] 03-06 09:15:45.215 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.220 12783 12783 D DashboardViewModel: Updated service elZnaf9TyxhelTgFOWjj (Economy Oil Change): 37
+[2026-03-06 09:15:45] 03-06 09:15:45.221 12783 12783 D DashboardViewModel: Updated readings: x=0.011440416, y=-0.016469084, z=-0.0058631897, vehicleId=eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:45] 03-06 09:15:45.232 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.234 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:45] 03-06 09:15:45.261 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.278 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.288 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.306 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.330 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.339 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.356 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.377 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.394 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.410 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.426 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.434 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:45] 03-06 09:15:45.442 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.458 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.475 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.491 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.508 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.525 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.543 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.561 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.577 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.600 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.609 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.628 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:45] 03-06 09:15:45.640 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.642 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:45] 03-06 09:15:45.680 12783 12783 D RoundedButton: >>> RoundedAccelerometerButton Composable rendered, isMonitoring=true <<<
+[2026-03-06 09:15:45] 03-06 09:15:45.684 12783 12783 D RoundedButton: >>> Button onClick lambda executed <<<
+[2026-03-06 09:15:56] 03-06 09:15:45.684 12783 12783 D Dashboard: >>> START BUTTON CLICKED! isMonitoring=true <<<
+[2026-03-06 09:15:56] 03-06 09:15:45.684 12783 12783 D Dashboard: >>> Calling onToggleMonitoring()
+[2026-03-06 09:15:56] 03-06 09:15:45.684 12783 12783 I DashboardViewModel: >>> STOP BUTTON CLICKED <<<
+[2026-03-06 09:15:56] 03-06 09:15:45.685 12783 12783 D DashboardViewModel: Stopping monitoring for vehicle: eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:56] 03-06 09:15:45.687 12783 12783 I DashboardViewModel: Monitoring stop initiated successfully
+[2026-03-06 09:15:56] 03-06 09:15:45.687 12783 12783 D Dashboard: >>> Calling onInteraction()
+[2026-03-06 09:15:56] 03-06 09:15:45.688 12783 12783 D GestureDebug: >>> onDashboardInteraction() called, isOverlayVisible=true
+[2026-03-06 09:15:56] 03-06 09:15:45.688 12783 12783 D GestureDebug: >>> onDashboardInteraction() completed successfully
+[2026-03-06 09:15:56] 03-06 09:15:45.688 12783 12783 D Dashboard: >>> Button handler complete
+[2026-03-06 09:15:56] 03-06 09:15:45.688 12783 12783 D RoundedButton: >>> Button onClick lambda complete <<<
+[2026-03-06 09:15:56] 03-06 09:15:45.697 12783 12783 I AccelerometerService: >>> onStartCommand called with action: com.mainlert.mainlertapp.STOP_MONITORING
+[2026-03-06 09:15:57] 03-06 09:15:45.697 12783 12783 I AccelerometerService: STOP_MONITORING received, stopping monitoring immediately
+[2026-03-06 09:15:57] 03-06 09:15:45.697 12783 12783 I AccelerometerService: Stopping monitoring: serviceId=elZnaf9TyxhelTgFOWjj, vehicleId=eBp61Fv9J62XIEXAREYK, mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=37.898308
+[2026-03-06 09:15:57] 03-06 09:15:45.699 12783 12783 D AccelerometerService: Sensor listeners unregistered
+[2026-03-06 09:15:57] 03-06 09:15:45.702 12783 12783 D AccelerometerService: Foreground notification removed
+[2026-03-06 09:15:57] 03-06 09:15:45.702 12783 12783 D AccelerometerService: Saving final reading to Firebase: mappingId=0Nmv15FEHmm9oFQHsO9I, totalMovement=37.898308
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: Exception during final save operations
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: java.lang.NullPointerException
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at com.mainlert.services.AccelerometerService$stopMonitoring$1.invokeSuspend(AccelerometerService.kt:790)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlin.coroutines.jvm.internal.BaseContinuationImpl.resumeWith(ContinuationImpl.kt:33)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.DispatchedTask.run(DispatchedTask.kt:108)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.internal.LimitedDispatcher$Worker.run(LimitedDispatcher.kt:115)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.scheduling.TaskImpl.run(Tasks.kt:103)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.scheduling.CoroutineScheduler.runSafely(CoroutineScheduler.kt:584)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.executeTask(CoroutineScheduler.kt:793)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.runWorker(CoroutineScheduler.kt:697)
+[2026-03-06 09:15:57] 03-06 09:15:45.708 12783 13008 E AccelerometerService: 	at kotlinx.coroutines.scheduling.CoroutineScheduler$Worker.run(CoroutineScheduler.kt:684)
+[2026-03-06 09:15:57] 03-06 09:15:45.709 12783 13008 D AccelerometerService: Clearing service state and stopping service
+[2026-03-06 09:15:57] 03-06 09:15:45.710 12783 13008 I AccelerometerService: Service stopped successfully
+[2026-03-06 09:15:57] 03-06 09:15:45.723 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:57] 03-06 09:15:45.825 12783 12783 D AccelerometerService: Sensor listeners unregistered in onDestroy()
+[2026-03-06 09:15:57] 03-06 09:15:45.826 12783 12783 D AccelerometerService: ServiceScope cancelled in onDestroy()
+[2026-03-06 09:15:57] 03-06 09:15:45.827 12783 12783 D AccelerometerService: Connectivity receiver unregistered in onDestroy()
+[2026-03-06 09:15:57] 03-06 09:15:45.827 12783 12783 I AccelerometerService: onDestroy() completed - service fully cleaned up
+[2026-03-06 09:15:57] 03-06 09:15:45.914 12783 12783 D DashboardViewModel: Updated Firebase mapping for service elZnaf9TyxhelTgFOWjj: 37.0
+[2026-03-06 09:15:57] 03-06 09:15:55.321 12783 12783 D GestureDebug: >>> onDashboardInteraction() called, isOverlayVisible=false
+[2026-03-06 09:15:57] 03-06 09:15:55.321 12783 12783 D GestureDebug: >>> onDashboardInteraction() completed successfully
+[2026-03-06 09:15:59] 03-06 09:15:56.584 12783 12783 D GestureDebug: >>> onDashboardInteraction() called, isOverlayVisible=false
+[2026-03-06 09:15:59] 03-06 09:15:56.584 12783 12783 D GestureDebug: >>> onDashboardInteraction() completed successfully
+[2026-03-06 09:15:59] 03-06 09:15:56.585 12783 12783 D DashboardViewModel: selectVehicle called with: Dorflix, vehicleId: aHr8YRYB3PaYZcIk9xcX
+[2026-03-06 09:15:59] 03-06 09:15:56.585 12783 12783 D DashboardViewModel: Loaded 1 global services for vehicle aHr8YRYB3PaYZcIk9xcX
+[2026-03-06 09:15:59] 03-06 09:15:56.585 12783 12783 D DashboardViewModel: Using 2 mappings from state for vehicle aHr8YRYB3PaYZcIk9xcX (total mappings in state: 18)
+[2026-03-06 09:15:59] 03-06 09:15:56.585 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:56.585 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:56.600 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:15:59] 03-06 09:15:56.661 12783 12783 D DashboardViewModel: Real-time update: 2 mappings for vehicle aHr8YRYB3PaYZcIk9xcX
+[2026-03-06 09:15:59] 03-06 09:15:57.236 12783 12783 D GestureDebug: >>> onDashboardInteraction() called, isOverlayVisible=false
+[2026-03-06 09:15:59] 03-06 09:15:57.236 12783 12783 D GestureDebug: >>> onDashboardInteraction() completed successfully
+[2026-03-06 09:15:59] 03-06 09:15:57.236 12783 12783 D DashboardViewModel: selectVehicle called with: Toyota Camry, vehicleId: eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Loaded 1 global services for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Using 16 mappings from state for vehicle eBp61Fv9J62XIEXAREYK (total mappings in state: 18)
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 2195
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 37
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:15:59] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.237 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.238 12783 12783 D DashboardViewModel: Initialized reading from mapping for service elZnaf9TyxhelTgFOWjj: 0
+[2026-03-06 09:16:00] 03-06 09:15:57.257 12783 12783 D DashboardScreen: NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=false, vehicles.size=3)
+[2026-03-06 09:16:00] 03-06 09:15:57.322 12783 12783 D DashboardViewModel: Real-time update: 16 mappings for vehicle eBp61Fv9J62XIEXAREYK
+[2026-03-06 09:16:00] 03-06 09:15:59.459 12783 12783 D GestureDebug: >>> onDashboardInteraction() called, isOverlayVisible=false
+[2026-03-06 09:16:00] 03-06 09:15:59.459 12783 12783 D GestureDebug: >>> onDashboardInteraction() completed successfully

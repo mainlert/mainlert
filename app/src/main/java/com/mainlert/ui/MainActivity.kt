@@ -1,6 +1,8 @@
 package com.mainlert.ui
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -13,9 +15,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.mainlert.services.BootReceiver
 import com.mainlert.ui.navigation.mainLertNavHost
 import com.mainlert.ui.theme.mainLertAppTheme
+import com.mainlert.data.local.sync.SyncTriggers
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Main Activity for MainLert app.
@@ -23,8 +28,17 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var syncTriggers: SyncTriggers
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Register sync triggers for lifecycle events
+        syncTriggers.registerWithLifecycle(this)
+
+        // Handle intent from BootReceiver
+        handleBootDetectionIntent(intent)
 
         checkAndRequestPermissions()
 
@@ -36,6 +50,23 @@ class MainActivity : ComponentActivity() {
                 ) {
                     mainLertNavHost()
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        // Handle intent when app is already running
+        intent?.let { handleBootDetectionIntent(it) }
+    }
+
+    private fun handleBootDetectionIntent(intent: Intent) {
+        if (intent.hasExtra(BootReceiver.EXTRA_SHOW_VEHICLE_SELECTION)) {
+            val shouldShow = intent.getBooleanExtra(BootReceiver.EXTRA_SHOW_VEHICLE_SELECTION, false)
+            if (shouldShow) {
+                android.util.Log.d("MainActivity", "Boot detection intent received - setting flag to show vehicle selection")
+                val prefs = getSharedPreferences("boot_detection", Context.MODE_PRIVATE)
+                prefs.edit().putBoolean("show_vehicle_selection", true).apply()
             }
         }
     }

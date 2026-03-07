@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -30,11 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.mainlert.ui.viewmodels.AuthViewModel
 import com.mainlert.ui.viewmodels.DashboardViewModel
+import com.mainlert.data.models.VehicleServiceMapping
 
 /**
  * Service Details screen for MainLert app.
@@ -60,8 +64,8 @@ fun serviceDetailsScreen(
     val currentUserRole by authViewModel.currentUserRole.collectAsState()
 
     // Observe dashboard state
-    val serviceReadings by dashboardViewModel.serviceReadings.collectAsState()
-    val isServiceActive by dashboardViewModel.isServiceActive.collectAsState()
+    val serviceReadingsMap by dashboardViewModel.serviceReadingsMap.collectAsState()
+    val isServiceActive by dashboardViewModel.isMonitoring.collectAsState()
 
     Scaffold(
         topBar = {
@@ -143,11 +147,12 @@ fun serviceDetailsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text("Current Readings", style = MaterialTheme.typography.bodyMedium)
+                        val currentReading = serviceReadingsMap[serviceId] ?: 0
                         Text(
-                            "$serviceReadings",
+                            "$currentReading",
                             style = MaterialTheme.typography.bodyLarge,
                             color =
-                                if (serviceReadings >= mileageThreshold) {
+                                if (currentReading >= mileageThreshold) {
                                     MaterialTheme.colorScheme.error
                                 } else {
                                     MaterialTheme.colorScheme.primary
@@ -167,36 +172,38 @@ fun serviceDetailsScreen(
                 }
             }
 
-            // Control Buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+            // Monitoring Control Info
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             ) {
-                Button(
-                    onClick = {
-                        if (isServiceActive) {
-                            dashboardViewModel.stopMonitoringService()
-                        } else {
-                            dashboardViewModel.startMonitoringService()
-                        }
-                    },
-                    enabled = !isLoading,
-                    modifier = Modifier.weight(1f),
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(if (isServiceActive) "Stop Monitoring" else "Start Monitoring")
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
-                        dashboardViewModel.resetServiceData()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                    enabled = !isLoading,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Reset Service")
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(48.dp).padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "Vehicle-Level Monitoring",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = "Monitoring is controlled from the dashboard. All services on a vehicle are monitored together.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                    Button(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
+                        Text("Go to Dashboard")
+                    }
                 }
             }
         }

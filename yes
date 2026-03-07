@@ -1,0 +1,7 @@
+[33mcommit 02429475ccb46771f80c7943ed324ed86b7f86dc[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31mmainLertApp/main[m[33m)[m
+Author: MainLert Developer <developer@mainlert.com>
+Date:   Tue Feb 17 21:28:46 2026 +0000
+
+    fix: start monitoring immediately and persist totalMovement across restarts
+
+app/src/main/java/com/mainlert/services/AccelerometerService.kt

@@ -4,11 +4,14 @@ import com.google.firebase.firestore.PropertyName
 
 /**
  * Service data model for MainLert app.
- * Represents a vehicle service with readings and status tracking.
+ * This is a SERVICE TEMPLATE - it defines the service type but does NOT store readings.
+ * Readings are stored in VehicleServiceMapping for each vehicle independently.
+ * 
+ * Example: "Economy Oil Change" is a template that can be assigned to multiple vehicles.
+ * Each vehicle will have their own VehicleServiceMapping with independent readings.
  */
 data class Service(
     var id: String = "",
-    var vehicleIds: List<String> = emptyList(),
     var variantId: String = "",
     var variantName: String = "",
     var serviceType: String = "",
@@ -17,13 +20,8 @@ data class Service(
     var description: String = "",
     var status: ServiceStatus = ServiceStatus.ACTIVE,
     var createdAt: Long = System.currentTimeMillis(),
-    var totalMovement: Float = 0f,
-    @get:PropertyName("isMonitoring")
-    @set:PropertyName("isMonitoring")
-    var isMonitoring: Boolean = false,
-    var lastReadingTime: Long = 0L,
     var userId: String = "",
-    // Default mileage limit (total movement threshold)
+    // Default mileage limit - this becomes the default for new vehicle mappings
     var mileageLimit: Float = 1000f,
 ) {
     enum class ServiceStatus {
@@ -32,15 +30,8 @@ data class Service(
         CANCELLED,
     }
 
-    /**
-     * Returns the first vehicle ID for backward compatibility
-     */
-    val vehicleId: String
-        get() = vehicleIds.firstOrNull() ?: ""
-
     fun toMap(): Map<String, Any?> {
         return mapOf(
-            "vehicleIds" to vehicleIds,
             "variantId" to variantId,
             "variantName" to variantName,
             "serviceType" to serviceType,
@@ -49,9 +40,6 @@ data class Service(
             "description" to description,
             "status" to status.name,
             "createdAt" to createdAt,
-            "totalMovement" to totalMovement,
-            "isMonitoring" to isMonitoring,
-            "lastReadingTime" to lastReadingTime,
             "userId" to userId,
             "mileageLimit" to mileageLimit,
         )

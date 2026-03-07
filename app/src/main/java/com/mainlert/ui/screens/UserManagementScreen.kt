@@ -193,6 +193,7 @@ fun DriversTab(
     // Vehicle fields for driver creation
     var vehicleName by remember { mutableStateOf("") }
     var vehiclePlateNumber by remember { mutableStateOf("") }
+    var vehicleInitialMileage by remember { mutableStateOf("") }
     
     // Assign Employee dialog state
     var showAssignDialog by remember { mutableStateOf(false) }
@@ -364,7 +365,10 @@ fun ManageVehiclesDialog(
 ) {
     val allVehicles by dashboardViewModel.vehicles.collectAsState()
     var newVehicleName by remember { mutableStateOf("") }
+    var newVehicleModel by remember { mutableStateOf("") }
+    var newVehicleYear by remember { mutableStateOf("") }
     var newVehiclePlate by remember { mutableStateOf("") }
+    var newVehicleInitialMileage by remember { mutableStateOf("") }
     var showAddVehicleForm by remember { mutableStateOf(false) }
     var vehicleDropdownExpanded by remember { mutableStateOf(false) }
     var selectedVehicle by remember { mutableStateOf<Vehicle?>(null) }
@@ -482,18 +486,46 @@ fun ManageVehiclesDialog(
                         label = { Text("Plate Number") },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newVehicleModel,
+                        onValueChange = { newVehicleModel = it },
+                        label = { Text("Model") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newVehicleYear,
+                        onValueChange = { newVehicleYear = it.filter { char -> char.isDigit() } },
+                        label = { Text("Year") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = newVehicleInitialMileage,
+                        onValueChange = { newVehicleInitialMileage = it.filter { char -> char.isDigit() } },
+                        label = { Text("Initial Mileage (optional)") },
+                        placeholder = { Text("Current odometer reading") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
                         onClick = {
                             if (newVehicleName.isNotBlank() && newVehiclePlate.isNotBlank()) {
                                 dashboardViewModel.createVehicle(
                                     name = newVehicleName,
+                                    model = newVehicleModel,
+                                    year = newVehicleYear.toIntOrNull() ?: 0,
                                     plateNumber = newVehiclePlate,
                                     userId = driver.userId,
-                                    employeeId = ""
+                                    employeeId = "",
+                                    initialLifetimeMileage = newVehicleInitialMileage.toFloatOrNull() ?: 0f
                                 )
                                 newVehicleName = ""
+                                newVehicleModel = ""
+                                newVehicleYear = ""
                                 newVehiclePlate = ""
+                                newVehicleInitialMileage = ""
                                 showAddVehicleForm = false
                             }
                         },
@@ -591,7 +623,10 @@ fun VehiclesTab(
 
     var showCreateForm by remember { mutableStateOf(false) }
     var vehicleName by remember { mutableStateOf("") }
+    var vehicleModel by remember { mutableStateOf("") }
+    var vehicleYear by remember { mutableStateOf("") }
     var plateNumber by remember { mutableStateOf("") }
+    var initialMileage by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (isLoading) CircularProgressIndicator(modifier = Modifier.padding(16.dp))
@@ -611,12 +646,47 @@ fun VehiclesTab(
                     OutlinedTextField(value = vehicleName, onValueChange = { vehicleName = it }, label = { Text("Vehicle Name") }, placeholder = { Text("e.g., Toyota Camry") }, modifier = Modifier.fillMaxWidth())
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(value = plateNumber, onValueChange = { plateNumber = it }, label = { Text("Plate Number") }, placeholder = { Text("e.g., ABC-123") }, modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = vehicleModel,
+                        onValueChange = { vehicleModel = it },
+                        label = { Text("Model") },
+                        placeholder = { Text("e.g., Camry") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = vehicleYear,
+                        onValueChange = { vehicleYear = it.filter { char -> char.isDigit() } },
+                        label = { Text("Year") },
+                        placeholder = { Text("e.g., 2020") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = initialMileage,
+                        onValueChange = { initialMileage = it.filter { char -> char.isDigit() } },
+                        label = { Text("Initial Mileage (optional)") },
+                        placeholder = { Text("Current odometer reading") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = {
-                            dashboardViewModel.createVehicle(name = vehicleName, plateNumber = plateNumber, userId = "", employeeId = currentUser?.userId ?: "")
+                            dashboardViewModel.createVehicle(
+                                name = vehicleName,
+                                model = vehicleModel,
+                                year = vehicleYear.toIntOrNull() ?: 0,
+                                plateNumber = plateNumber,
+                                userId = "",
+                                employeeId = currentUser?.userId ?: "",
+                                initialLifetimeMileage = initialMileage.toFloatOrNull() ?: 0f
+                            )
                             vehicleName = ""
+                            vehicleModel = ""
+                            vehicleYear = ""
                             plateNumber = ""
+                            initialMileage = ""
                             showCreateForm = false
                         },
                         enabled = vehicleName.isNotBlank() && plateNumber.isNotBlank(),
@@ -658,12 +728,14 @@ fun VehicleManagementCard(
     onAddService: (String) -> Unit,
 ) {
     var showServiceMenu by remember { mutableStateOf(false) }
-    val vehicleServices = services.filter { it.vehicleIds.contains(vehicle.id) }
     
-    // Filter out services that are already assigned to this vehicle
-    val availableServices = services.filter { service ->
-        !service.vehicleIds.contains(vehicle.id)
-    }
+    // In the new architecture, services are GLOBAL templates (not tied to any user)
+    // They can be assigned to any vehicle via VehicleServiceMapping
+    // VehicleServiceMapping stores the actual vehicle-service relationships with independent readings
+    val vehicleServices = services  // All services are available for all vehicles
+    
+    // Available services are all services (global templates)
+    val availableServices = services  // No filtering - services are global
 
     Card(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
         Row(
@@ -684,6 +756,13 @@ fun VehicleManagementCard(
                     "Status: ${vehicle.status.name}",
                     style = MaterialTheme.typography.labelSmall,
                 )
+                if (vehicle.lifetimeMileage > 0) {
+                    Text(
+                        "Lifetime Mileage: ${vehicle.lifetimeMileage.toInt()}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
                 if (vehicleServices.isNotEmpty()) {
                     Text(
                         "Services: ${vehicleServices.size}",
@@ -809,7 +888,7 @@ fun ServiceVariantsTab(
                             variantToEdit = variant
                             editVariantName = variant.name
                             editVariantDescription = variant.description
-                            editMileageLimit = variant.mileageLimit.toInt().toString()
+                            editMileageLimit = variant.mileageLimit.toString()
                             showEditDialog = true
                         }
                     )
@@ -881,7 +960,7 @@ fun ServiceVariantCard(variant: ServiceVariant, onDelete: () -> Unit, onEdit: ()
                 Text(variant.name, style = MaterialTheme.typography.titleMedium)
                 Text(variant.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("Mileage Limit: ${variant.mileageLimit.toInt()}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                Text("Mileage Limit: ${variant.mileageLimit}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
             }
             Row {
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = MaterialTheme.colorScheme.primary) }

@@ -52,12 +52,34 @@ service cloud.firestore {
       allow write: if isAuthenticated() && (isAdmin() || isEmployee());
     }
 
-    // Services collection
+    // Services collection (templates - no readings stored)
+    // Readings are now stored in vehicle_service_mappings
     match /services/{serviceId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (isAdmin() || isEmployee());
       allow update: if isAuthenticated() && (isAdmin() || isEmployee());
       allow delete: if isAdmin();
+    }
+
+    // Allow authenticated users to manage vehicle service mappings
+    match /vehicle_service_mappings/{mappingId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && (
+        // User can create mappings for vehicles they own
+        (request.resource.data.userId == request.auth.uid) ||
+        // Admins and employees can create mappings for any user
+        isAdmin() || 
+        isEmployee()
+      );
+      allow update: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin() || 
+        isEmployee()
+      );
+      allow delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        isAdmin()
+      );
     }
 
     // Notifications collection

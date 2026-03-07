@@ -65,6 +65,8 @@ interface VehicleRepository {
      */
     suspend fun createVehicleForDriver(
         vehicleName: String,
+        model: String,
+        year: Int,
         plateNumber: String,
         driverId: String,
         employeeId: String = "",
@@ -74,4 +76,10 @@ interface VehicleRepository {
      * Observe vehicles for a user in real-time.
      */
     fun observeVehiclesForUser(userId: String): Flow<List<Vehicle>>
+
+    /**
+     * Update the lifetime mileage for a vehicle.
+     * This accumulates forever and never resets.
+     */
+    suspend fun updateVehicleLifetimeMileage(vehicleId: String, mileage: Float): Result<Vehicle>
 }
