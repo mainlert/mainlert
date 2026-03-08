@@ -38,6 +38,9 @@ interface VehicleServiceMappingDao {
     @Query("UPDATE vehicle_service_mappings SET totalMovement = :movement, localLastUpdated = :timestamp WHERE id = :mappingId")
     suspend fun updateMovement(mappingId: String, movement: Float, timestamp: Long)
     
+    @Query("UPDATE vehicle_service_mappings SET totalMovement = :movement, localLastUpdated = :timestamp WHERE id = :mappingId")
+    suspend fun updateMovementCheckpoint(mappingId: String, movement: Float, timestamp: Long)
+    
     @Query("UPDATE vehicle_service_mappings SET isMonitoring = :isMonitoring, lastReadingTime = :timestamp WHERE id = :mappingId")
     suspend fun updateMonitoringStatus(mappingId: String, isMonitoring: Boolean, timestamp: Long)
     

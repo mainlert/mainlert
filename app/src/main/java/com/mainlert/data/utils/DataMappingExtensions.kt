@@ -161,8 +161,8 @@ fun DocumentSnapshot.toUser(): User {
     user.email = this.getString("email") ?: ""
     user.name = this.getString("name") ?: ""
     user.role = UserRole.valueOf(this.getString("role") ?: UserRole.DRIVER.name)
-    user.vehicleIds = this.get("vehicleIds") as? List<String> ?: emptyList()
-    user.managedDriverIds = this.get("managedDriverIds") as? List<String> ?: emptyList()
+    user.vehicleIds = (this.get("vehicleIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    user.managedDriverIds = (this.get("managedDriverIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     user.managerId = this.getString("managerId") ?: ""
     user.isActive = this.getBoolean("isActive") ?: true
     user.createdAt = this.getLong("createdAt") ?: System.currentTimeMillis()
@@ -196,18 +196,4 @@ fun DocumentSnapshot.toServiceVariant(): ServiceVariant {
     variant.createdAt = this.getLong("createdAt") ?: System.currentTimeMillis()
     variant.isActive = this.getBoolean("isActive") ?: true
     return variant
-}
-
-// Domain to Entity conversions (these delegate to the entity's toVehicleEntity/toServiceEntity extensions)
-// These provide the function names that other files are trying to import
-fun Vehicle.toVehicleEntity(): VehicleEntity {
-    return this.toVehicleEntity()
-}
-
-fun Service.toServiceEntity(): ServiceEntity {
-    return this.toServiceEntity()
-}
-
-fun VehicleServiceMapping.toVehicleServiceMappingEntity(): VehicleServiceMappingEntity {
-    return this.toEntity()
 }

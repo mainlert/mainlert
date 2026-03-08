@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlin.math.pow
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import com.mainlert.data.local.entities.toVehicleFirebaseMap
@@ -46,6 +47,20 @@ class SyncManager @Inject constructor(
     
     private val _syncMetrics = MutableStateFlow(SyncMetrics())
     val syncMetrics: StateFlow<SyncMetrics> = _syncMetrics
+    
+    // Throttling for continuous sync to avoid Firebase abuse
+    private var lastContinuousSyncTime = 0L
+    private val continuousSyncThrottleMs = TimeUnit.SECONDS.toMillis(30) // 30 seconds
+    
+    // Exponential backoff for failed syncs
+    private var consecutiveFailures = 0
+    private val maxBackoffDelay = TimeUnit.SECONDS.toMillis(300) // 5 minutes max
+    private val baseBackoffDelay = TimeUnit.SECONDS.toMillis(5) // 5 seconds base
+    
+    // Track last successful sync times for staleness detection
+    private var lastSuccessfulStructureSync = 0L
+    private var lastSuccessfulContinuousSync = 0L
+    private val staleDataThresholdMs = TimeUnit.MINUTES.toMillis(5) // 5 minutes
     
     init {
         // Observe network changes and trigger sync when online
@@ -80,6 +95,9 @@ class SyncManager @Inject constructor(
             updateSyncMetrics(startTime, endTime, 0, 0)
             updateSyncState(SyncState.StructureSynced)
             
+            // Record successful structure sync
+            lastSuccessfulStructureSync = System.currentTimeMillis()
+            
         } catch (e: Exception) {
             updateSyncState(SyncState.Error("Structure sync failed: ${e.message}"))
             handleSyncFailure(e)
@@ -93,6 +111,27 @@ class SyncManager @Inject constructor(
         if (!networkMonitor.isOnline()) {
             updateSyncState(SyncState.Offline)
             return
+        }
+        
+        // Throttle: prevent too frequent syncs (max once per 30 seconds)
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastContinuousSyncTime < continuousSyncThrottleMs) {
+            android.util.Log.d("SyncManager", "Sync throttled: last sync was ${currentTime - lastContinuousSyncTime}ms ago, minimum interval is ${continuousSyncThrottleMs}ms")
+            return
+        }
+        
+        lastContinuousSyncTime = currentTime
+        
+        // Check if we should backoff due to recent failures
+        if (consecutiveFailures > 0) {
+            val backoffDelay = calculateBackoffDelay()
+            if (currentTime - lastContinuousSyncTime < backoffDelay) {
+                android.util.Log.d("SyncManager", "Sync in backoff period: ${currentTime - lastContinuousSyncTime}ms < $backoffDelay")
+                updateSyncState(SyncState.Error("Sync in backoff period due to recent failures"))
+                return
+            }
+            // Reset failures after backoff period has passed
+            consecutiveFailures = 0
         }
         
         updateSyncState(SyncState.SyncingContinuous)
@@ -117,7 +156,14 @@ class SyncManager @Inject constructor(
             updateSyncMetrics(startTime, endTime, itemsSynced, conflictsResolved)
             updateSyncState(SyncState.ContinuousSynced)
             
+            // Reset failure count on success
+            consecutiveFailures = 0
+            
+            // Record successful continuous sync
+            lastSuccessfulContinuousSync = System.currentTimeMillis()
+            
         } catch (e: Exception) {
+            consecutiveFailures++
             updateSyncState(SyncState.Error("Continuous sync failed: ${e.message}"))
             handleSyncFailure(e)
         }
@@ -492,10 +538,40 @@ class SyncManager @Inject constructor(
     /**
      * Handle sync failures.
      */
+    /**
+     * Checks if structure data is stale (older than threshold).
+     */
+    fun isStructureDataStale(): Boolean {
+        if (lastSuccessfulStructureSync == 0L) return true // Never synced
+        val currentTime = System.currentTimeMillis()
+        return (currentTime - lastSuccessfulStructureSync) > staleDataThresholdMs
+    }
+    
+    /**
+     * Checks if continuous data is stale (older than threshold).
+     */
+    fun isContinuousDataStale(): Boolean {
+        if (lastSuccessfulContinuousSync == 0L) return true // Never synced
+        val currentTime = System.currentTimeMillis()
+        return (currentTime - lastSuccessfulContinuousSync) > staleDataThresholdMs
+    }
+    
     private fun handleSyncFailure(error: Exception) {
-        // Log error
-        // Could add retry logic here
-        // Could queue failed operations for later retry
+        android.util.Log.e("SyncManager", "Sync failed: ${error.message}", error)
+        // Additional retry logic could be added here
+        // For now, exponential backoff is handled in syncContinuousData()
+    }
+    
+    /**
+     * Calculate exponential backoff delay based on consecutive failures.
+     * Uses exponential backoff with jitter to avoid thundering herd.
+     */
+    private fun calculateBackoffDelay(): Long {
+        val exponentialDelay = baseBackoffDelay * (2.0.pow(consecutiveFailures - 1)).toLong()
+        val jitter = (0..1000).random().toLong()
+        val delay = (exponentialDelay + jitter).coerceAtMost(maxBackoffDelay)
+        android.util.Log.d("SyncManager", "Calculated backoff delay: ${delay}ms (consecutiveFailures=$consecutiveFailures)")
+        return delay
     }
     
     /**
@@ -510,5 +586,53 @@ class SyncManager @Inject constructor(
      */
     fun resetMetrics() {
         _syncMetrics.value = SyncMetrics()
+    }
+    
+    /**
+     * Get consecutive failure count (for debugging/monitoring).
+     */
+    fun getConsecutiveFailures(): Int {
+        return consecutiveFailures
+    }
+    
+    /**
+     * Perform auto-sync with staleness checks.
+     * Only syncs if data is stale, respecting throttling and backoff.
+     * Returns true if sync was attempted, false if skipped due to staleness check.
+     */
+    suspend fun autoSyncIfStale(userId: String): Boolean {
+        // Check if we should sync structure data
+        val structureStale = isStructureDataStale()
+        val continuousStale = isContinuousDataStale()
+        
+        if (!structureStale && !continuousStale) {
+            android.util.Log.d("SyncManager", "Auto-sync skipped: data is fresh (structure: ${lastSuccessfulStructureSync}ms ago, continuous: ${lastSuccessfulContinuousSync}ms ago)")
+            return false
+        }
+        
+        android.util.Log.d("SyncManager", "Auto-sync triggered: structureStale=$structureStale, continuousStale=$continuousStale")
+        
+        // Sync structure if stale
+        if (structureStale) {
+            try {
+                syncFromFirebase(userId)
+            } catch (e: Exception) {
+                android.util.Log.e("SyncManager", "Auto-sync structure failed: ${e.message}")
+                // Continue to try continuous sync even if structure fails
+            }
+        }
+        
+        // Sync continuous data if stale (with delay to avoid overwhelming Firebase)
+        if (continuousStale) {
+            try {
+                // Small delay between structure and continuous sync
+                kotlinx.coroutines.delay(1000)
+                syncContinuousData()
+            } catch (e: Exception) {
+                android.util.Log.e("SyncManager", "Auto-sync continuous failed: ${e.message}")
+            }
+        }
+        
+        return true
     }
 }

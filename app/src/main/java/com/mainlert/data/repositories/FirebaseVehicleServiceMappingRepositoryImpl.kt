@@ -240,6 +240,25 @@ class FirebaseVehicleServiceMappingRepositoryImpl
         }
     }
 
+    override suspend fun saveMovementCheckpoint(
+        mappingId: String,
+        totalMovement: Float,
+    ): Result<Unit> {
+        return try {
+            val timestamp = System.currentTimeMillis()
+            mappingsCollection.document(mappingId).update(
+                mapOf(
+                    "totalMovement" to totalMovement,
+                    "lastReadingTime" to timestamp,
+                    "checkpointTimestamp" to timestamp,
+                ),
+            ).await()
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to save movement checkpoint")
+        }
+    }
+
     override suspend fun startMappingMonitoring(mappingId: String): Result<Unit> {
         return try {
             mappingsCollection.document(mappingId).update(

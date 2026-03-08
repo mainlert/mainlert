@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.VideocamOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +51,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,7 +70,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -80,6 +83,7 @@ import androidx.navigation.NavController
 import com.mainlert.data.models.Service
 import com.mainlert.data.models.User
 import com.mainlert.data.models.Vehicle
+import com.mainlert.data.models.VehicleServiceMapping
 import com.mainlert.ui.components.YouTubePlayer
 import com.mainlert.ui.viewmodels.AuthViewModel
 import com.mainlert.ui.viewmodels.DashboardViewModel
@@ -88,26 +92,62 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+
+
+
+
 @Composable
 fun dashboardScreen(
     navController: NavController,
     authViewModel: AuthViewModel = hiltViewModel(),
     dashboardViewModel: DashboardViewModel = hiltViewModel(),
 ) {
+    
     var currentServiceIndex by remember { mutableStateOf(0) }
+    var selectedServiceId by remember { mutableStateOf<String?>(null) }
     val isLoading by authViewModel.isLoading.collectAsState()
     val errorMessage by authViewModel.errorMessage.collectAsState()
     val successMessage by authViewModel.successMessage.collectAsState()
     val currentUser by authViewModel.currentUser.collectAsState()
-    val serviceReadings by dashboardViewModel.serviceReadings.collectAsState()
-    val services by dashboardViewModel.services.collectAsState()
+    val serviceReadingsMap by dashboardViewModel.serviceReadingsMap.collectAsState()
     val vehicles by dashboardViewModel.vehicles.collectAsState()
     val selectedVehicle by dashboardViewModel.selectedVehicle.collectAsState()
     val vehicleServices by dashboardViewModel.vehicleServices.collectAsState()
+    val vehicleServiceMappings by dashboardViewModel.vehicleServiceMappings.collectAsState()
     val isMonitoring by dashboardViewModel.isMonitoring.collectAsState()
     val accelerometerReadings by dashboardViewModel.accelerometerReadings.collectAsState()
     val showVehicleSelectionDialog by dashboardViewModel.showVehicleSelectionDialog.collectAsState()
     val showResetServiceDialog by dashboardViewModel.showResetServiceDialog.collectAsState()
+    val shouldShowVehicleSelectionFromBoot by dashboardViewModel.shouldShowVehicleSelectionFromBoot.collectAsState()
+    val isBootReceiverEnabled by dashboardViewModel.bootReceiverEnabled.collectAsState()
+    val autoStopTimeout by dashboardViewModel.autoStopTimeout.collectAsState()
+    val syncState by dashboardViewModel.syncState.collectAsState()
+    val isUsingCachedThresholds by dashboardViewModel.isUsingCachedThresholds.collectAsState()
+    
+    // Sync status UI state
+    var showSyncError by remember { mutableStateOf(false) }
+    var syncErrorMessage by remember { mutableStateOf("") }
+    
+    // Show error message when sync fails
+    LaunchedEffect(syncState) {
+        when (val state = syncState) {
+            is com.mainlert.data.local.sync.SyncState.Error -> {
+                syncErrorMessage = state.message
+                showSyncError = true
+            }
+            else -> {
+                showSyncError = false
+            }
+        }
+    }
+    
+    // Diagnostic logging for dialog state changes
+    LaunchedEffect(showVehicleSelectionDialog) {
+        android.util.Log.d("DashboardScreen", "showVehicleSelectionDialog changed to: $showVehicleSelectionDialog")
+    }
+    LaunchedEffect(showResetServiceDialog) {
+        android.util.Log.d("DashboardScreen", "showResetServiceDialog changed to: $showResetServiceDialog")
+    }
     val resetDialogStep by dashboardViewModel.resetDialogStep.collectAsState()
     val selectedDriverForReset by dashboardViewModel.selectedDriverForReset.collectAsState()
     val selectedVehicleForReset by dashboardViewModel.selectedVehicleForReset.collectAsState()
@@ -117,13 +157,60 @@ fun dashboardScreen(
     var servicesForReset by remember { mutableStateOf(vehicleServices) }
     var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var isOverlayVisible by remember { mutableStateOf(false) }
-    var isVideoEnabled by remember { mutableStateOf(true) }
+    var isVideoEnabled by remember { mutableStateOf(false) }
     val inactivityTimeout = 15000L
 
+    // ADD THESE LINES after line 116:
+    val onDashboardInteraction: () -> Unit = {
+        Log.d("GestureDebug", ">>> onDashboardInteraction() called, isOverlayVisible=$isOverlayVisible")
+        lastInteractionTime = System.currentTimeMillis()
+        isOverlayVisible = false  // Hide overlay immediately when interacting
+        Log.d("GestureDebug", ">>> onDashboardInteraction() completed successfully")
+    }
+    
+    // Auto-sync with staleness check when screen becomes visible
+    LaunchedEffect(Unit) {
+        val user = authViewModel.currentUser.value
+        if (user != null) {
+            dashboardViewModel.triggerAutoSync()
+        }
+    }
+    
     // Load vehicles for current user on launch
     LaunchedEffect(currentUser) {
         currentUser?.let { user ->
             dashboardViewModel.loadVehiclesForUser(user.userId)
+        }
+    }
+
+    // Handle boot detection - auto-show vehicle selection dialog when triggered
+    LaunchedEffect(shouldShowVehicleSelectionFromBoot) {
+        if (shouldShowVehicleSelectionFromBoot) {
+            android.util.Log.d("DashboardScreen", "Boot detection triggered - showing vehicle selection dialog")
+            // Ensure we have vehicles loaded before showing dialog
+            if (vehicles.isNotEmpty()) {
+                dashboardViewModel.showVehicleSelectionDialog()
+                dashboardViewModel.clearBootDetectionFlag()
+            } else {
+                android.util.Log.d("DashboardScreen", "Vehicles not loaded yet, waiting...")
+                // Wait for vehicles to load
+                snapshotFlow { vehicles.size }
+                    .collect { size ->
+                        if (size > 0) {
+                            dashboardViewModel.showVehicleSelectionDialog()
+                            dashboardViewModel.clearBootDetectionFlag()
+                        }
+                    }
+            }
+        }
+    }
+
+    // Set up real-time listeners for selected vehicle
+    LaunchedEffect(selectedVehicle) {
+        selectedVehicle?.let { vehicle ->
+            dashboardViewModel.setupRealTimeListenersForVehicle(vehicle.id)
+        } ?: run {
+            dashboardViewModel.clearRealTimeListeners()
         }
     }
 
@@ -151,49 +238,121 @@ fun dashboardScreen(
         }
     }
 
-    val onInteraction: () -> Unit = {
-        lastInteractionTime = System.currentTimeMillis()
-    }
-
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(top = 56.dp)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = if (isOverlayVisible) 160.dp else 0.dp)
-                    .pointerInput(Unit) {
-                        // Reset countdown on ANY touch to the dashboard
-                        detectTapGestures { onInteraction() }
-                    },
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally,
+            // Header (fixed at top, never scrolls)
+    if (!isOverlayVisible) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp, start = 16.dp, end = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!isOverlayVisible) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                Column {
                     Text(
                         text = "MainLert Dashboard",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                     )
-                    IconButton(
-                        onClick = {
-                            onInteraction()
-                            authViewModel.logout()
-                            navController.navigate("login") {
-                                popUpTo("dashboard") { inclusive = true }
-                            }
-                        },
-                    ) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                    // Sync status indicator
+                    when (syncState) {
+                        is com.mainlert.data.local.sync.SyncState.SyncingContinuous,
+                        is com.mainlert.data.local.sync.SyncState.SyncingStructure -> {
+                            Text(
+                                text = "Syncing...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        is com.mainlert.data.local.sync.SyncState.Error -> {
+                            Text(
+                                text = "Sync Error",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                        is com.mainlert.data.local.sync.SyncState.Offline -> {
+                            Text(
+                                text = "Offline",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                        else -> {
+                            Text(
+                                text = "Synced",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
+                
+                // Offline mode indicator (when using cached thresholds)
+                if (isUsingCachedThresholds) {
+                    Surface(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.WifiOff,
+                                contentDescription = "Offline Mode",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.tertiary
+                            )
+                            Text(
+                                text = "Offline",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
+                        }
+                    }
+                }
+                
+                IconButton(
+                    onClick = {
+                        onDashboardInteraction()
+                        authViewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo("dashboard") { inclusive = true }
+                        }
+                    },
+                ) {
+                    Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
+                }
+            }
+        }
+
+        // Scrollable content area
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = if (!isOverlayVisible) 50.dp else 10.dp) // Adjust top padding based on header visibility
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState())
+                    .pointerInput(Unit) {
+                        // Detect any touch without interfering with scrolling/clicking
+                        awaitPointerEventScope {
+                            while (true) {
+                                awaitPointerEvent()
+                                onDashboardInteraction()
+                            }
+                        }
+                    }
+                    .padding(bottom = if (isOverlayVisible) 160.dp else 0.dp),
+
+
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (!isOverlayVisible) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
@@ -209,6 +368,7 @@ fun dashboardScreen(
             currentUser?.let { user ->
                 Text(text = "Welcome, ${user.name}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
             }
+
 
             // Vehicle Selection Section
             Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
@@ -231,7 +391,10 @@ fun dashboardScreen(
                                 VehicleCard(
                                     vehicle = vehicle,
                                     isSelected = selectedVehicle?.id == vehicle.id,
-                                    onClick = { dashboardViewModel.selectVehicle(vehicle) },
+                                    onClick = { 
+                                        onDashboardInteraction()
+                                        dashboardViewModel.selectVehicle(vehicle) 
+                                    },
                                     isEnabled = !isMonitoring,
                                     isMonitoringActive = isMonitoring
                                 )
@@ -261,24 +424,64 @@ fun dashboardScreen(
                         }
                         
                         if (vehicleServices.isEmpty()) {
-                            Text(
-                                text = "No services for this vehicle. Create a service to get started.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Default.Home,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Text(
+                                    text = "No services assigned to this vehicle",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                )
+                                Text(
+                                    text = "Add services to vehicles to start monitoring",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         } else {
                             LazyColumn(
                                 modifier = Modifier.height((vehicleServices.size * 100).coerceAtMost(300).dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(vehicleServices) { service ->
+                                    // Capture selected vehicle in local variable to avoid smart cast issue
+                                    val currentVehicle = selectedVehicle
+                                    // Get totalMovement from VehicleServiceMapping for this service
+                                    val mapping = vehicleServiceMappings.find {
+                                        it.vehicleId == currentVehicle?.id && it.serviceId == service.id
+                                    }
+                                    val totalMovement = mapping?.totalMovement?.toInt() ?: 0
+                                    
+                                    val isSelected = selectedServiceId == service.id
+                                    
                                     ServiceRowCard(
                                         service = service,
-                                        currentReadings = serviceReadings,
-                                        onClick = { dashboardViewModel.startMonitoringForService(service.id) },
+                                        totalMovement = totalMovement,
+                                        onClick = {
+                                            onDashboardInteraction()
+                                            if (isMonitoring) {
+                                                // Select this service for display in readings section
+                                                selectedServiceId = service.id
+                                            } else {
+                                                // Show prompt to start monitoring first
+                                                dashboardViewModel.startMonitoringService()
+                                            }
+                                        },
                                         isEnabled = !isMonitoring,
-                                        isMonitoringActive = isMonitoring
+                                        isMonitoringActive = isMonitoring,
+                                        isSelected = isSelected
                                     )
                                 }
                             }
@@ -287,44 +490,118 @@ fun dashboardScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(text = "Service Readings", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 8.dp))
-                    if (vehicleServices.isEmpty()) {
-                        Text(
-                            text = "No services for selected vehicle",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Text(text = "Current Readings", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
+                    // Determine which service to display for accumulated reading
+                    val displayService = if (selectedServiceId != null) {
+                        vehicleServices.find { it.id == selectedServiceId }
                     } else {
-                        val currentService = vehicleServices[currentServiceIndex]
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Column {
-                                Text(currentService.variantName.ifEmpty { currentService.name }, style = MaterialTheme.typography.bodyMedium)
-                                Text("$serviceReadings", style = MaterialTheme.typography.displaySmall, color = if (serviceReadings >= currentService.mileageLimit.toInt()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-                            }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("Mileage Limit", style = MaterialTheme.typography.bodyMedium)
-                                Text("${currentService.mileageLimit.toInt()}", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
+                        if (vehicleServices.isNotEmpty()) {
+                            vehicleServices[currentServiceIndex % vehicleServices.size]
+                        } else null
+                    }
+                    
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        // Left: Accumulated service reading
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            val accumulatedReading = displayService?.let { serviceReadingsMap[it.id] } ?: 0
+                            Text(
+                                text = "$accumulatedReading",
+                                style = MaterialTheme.typography.displaySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Total",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
+                        // Right: X, Y, Z values (larger)
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            modifier = Modifier.weight(2f)
+                        ) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = String.format("%.1f", accelerometerReadings.first),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "X",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = String.format("%.1f", accelerometerReadings.second),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Y",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = String.format("%.1f", accelerometerReadings.third),
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1
+                                    )
+                                    Text(
+                                        text = "Z",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1
+                                    )
+                                }
                             }
                         }
-                        Text(
-                            text = "Service ${currentServiceIndex + 1} of ${vehicleServices.size}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
                     }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = if (isMonitoring) "Live accelerometer data" else "Start monitoring to see live readings",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isMonitoring) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+
+
+                        Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+        ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "Accelerometer Service", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Button(
                             onClick = {
-                                onInteraction()
+                                onDashboardInteraction()
                                 navController.navigate("service_management")
                             },
                             enabled = authViewModel.isAdmin(),
@@ -337,14 +614,19 @@ fun dashboardScreen(
                 }
             }
 
-            if (authViewModel.isEmployee() || authViewModel.isAdmin()) {
-                Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+
+                        if (authViewModel.isEmployee() || authViewModel.isAdmin()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Service Management", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Button(
                                 onClick = {
-                                    onInteraction()
+                                    onDashboardInteraction()
                                     dashboardViewModel.showResetServiceDialog()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -352,7 +634,7 @@ fun dashboardScreen(
                             ) {
                                 Text("Reset Service")
                             }
-                            TextButton(onClick = { onInteraction(); navController.navigate("service_history") }, enabled = !isLoading) {
+                            TextButton(onClick = { onDashboardInteraction(); navController.navigate("service_history") }, enabled = !isLoading) {
                                 Text("Service History")
                             }
                         }
@@ -360,8 +642,13 @@ fun dashboardScreen(
                 }
             }
 
-            if (authViewModel.isAdmin()) {
-                Card(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+
+                        if (authViewModel.isAdmin()) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "Admin Controls", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(bottom = 12.dp))
                         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -371,10 +658,10 @@ fun dashboardScreen(
                                 else -> TextStyle(fontSize = 14.sp)
                             }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(onClick = { onInteraction(); navController.navigate("user_management") }, enabled = !isLoading, modifier = Modifier.weight(1f)) {
+                                Button(onClick = { onDashboardInteraction(); navController.navigate("user_management") }, enabled = !isLoading, modifier = Modifier.weight(1f)) {
                                     Text("User Management", style = buttonTextStyle)
                                 }
-                                Button(onClick = { onInteraction(); navController.navigate("system_settings") }, enabled = !isLoading, modifier = Modifier.weight(1f)) {
+                                Button(onClick = { onDashboardInteraction(); navController.navigate("system_settings") }, enabled = !isLoading, modifier = Modifier.weight(1f)) {
                                     Text("System Settings", style = buttonTextStyle)
                                 }
                             }
@@ -382,7 +669,110 @@ fun dashboardScreen(
                     }
                 }
             }
+    
+            // Boot Receiver Toggle Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Auto-Start on Movement",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = if (isBootReceiverEnabled) "Enabled: App will launch when vehicle movement is detected after boot"
+                                      else "Disabled: Boot detection is turned off",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                        Switch(
+                            checked = isBootReceiverEnabled,
+                            onCheckedChange = { enabled ->
+                                onDashboardInteraction()
+                                dashboardViewModel.setBootReceiverEnabled(enabled)
+                            }
+                        )
+                    }
+                }
+            }
 
+            // Auto-Stop Timeout Setting Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Auto-Stop Timeout",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Stop monitoring after vehicle is stationary for:",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Timeout selector: hours only (1, 2, 4, 8, 24)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val timeoutOptions = listOf(1L, 2L, 4L, 8L, 24L)
+                        timeoutOptions.forEach { hours ->
+                            val isSelected = (autoStopTimeout / 3600000L) == hours
+                            Button(
+                                onClick = {
+                                    onDashboardInteraction()
+                                    dashboardViewModel.setAutoStopTimeout(hours * 3600000L)
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary
+                                                   else MaterialTheme.colorScheme.surfaceVariant
+                                ),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "${hours}h",
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    
+                    Text(
+                        text = "Monitoring will automatically stop after ${autoStopTimeout / 3600000} hour(s) of no vehicle movement",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
+            }
+    
             Spacer(modifier = Modifier.height(100.dp))
         }
 
@@ -394,7 +784,7 @@ fun dashboardScreen(
                 accelerometerReadings = accelerometerReadings,
                 isMonitoring = isMonitoring,
                 isVideoEnabled = isVideoEnabled,
-                serviceReadings = serviceReadings,
+                serviceReadingsMap = serviceReadingsMap,
                 onToggleMonitoring = {
                     if (isMonitoring) {
                         dashboardViewModel.stopMonitoringService()
@@ -403,21 +793,26 @@ fun dashboardScreen(
                     }
                 },
                 onToggleVideo = { isVideoEnabled = !isVideoEnabled },
-                onInteraction = onInteraction,
+                onInteraction = onDashboardInteraction,
             )
         }
 
         // Show vehicle selection dialog when triggered
         if (showVehicleSelectionDialog) {
+            android.util.Log.d("DashboardScreen", "Showing VehicleSelectionDialog with ${vehicles.size} vehicles: ${vehicles.map { it.name }}")
             VehicleSelectionDialog(
                 vehicles = vehicles,
                 onVehicleSelected = { vehicle ->
+                    android.util.Log.d("DashboardScreen", "Vehicle selected: ${vehicle.name}")
                     dashboardViewModel.onVehicleSelectedForMonitoring(vehicle)
                 },
                 onDismiss = {
+                    android.util.Log.d("DashboardScreen", "VehicleSelectionDialog dismissed")
                     dashboardViewModel.hideVehicleSelectionDialog()
                 },
             )
+        } else {
+            android.util.Log.d("DashboardScreen", "NOT showing VehicleSelectionDialog (showVehicleSelectionDialog=$showVehicleSelectionDialog, vehicles.size=${vehicles.size})")
         }
 
         // Show reset service dialog when triggered
@@ -453,6 +848,41 @@ fun dashboardScreen(
                 },
             )
         }
+        
+        // Show sync error dialog when there's a sync error
+        if (showSyncError && syncErrorMessage.isNotEmpty()) {
+            AlertDialog(
+                onDismissRequest = {
+                    showSyncError = false
+                },
+                title = {
+                    Text("Sync Error")
+                },
+                text = {
+                    Text(syncErrorMessage)
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showSyncError = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showSyncError = false
+                            // Optionally trigger a manual sync
+                            dashboardViewModel.triggerManualSync()
+                        }
+                    ) {
+                        Text("Retry")
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -464,7 +894,7 @@ fun InactivityOverlay(
     accelerometerReadings: Triple<Float, Float, Float>,
     isMonitoring: Boolean,
     isVideoEnabled: Boolean,
-    serviceReadings: Int = 0,
+    serviceReadingsMap: Map<String, Int> = emptyMap(),
     onToggleMonitoring: () -> Unit,
     onToggleVideo: () -> Unit,
     onInteraction: () -> Unit,
@@ -478,7 +908,7 @@ fun InactivityOverlay(
         Box(modifier = Modifier.fillMaxSize().offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }.pointerInput(Unit) {
             detectDragGestures(
                 onDragEnd = {
-                    if (abs(offsetX) > 100 || abs(offsetY) > 100) {
+                    if (kotlin.math.abs(offsetX) > 100 || kotlin.math.abs(offsetY) > 100) {
                         onInteraction()
                     }
                     offsetX = 0f
@@ -538,14 +968,15 @@ fun InactivityOverlay(
                 if (isVideoEnabled) {
                     YouTubePlayer(
                         playlistId = "PLhFO614gb9CpY3ABVEPe_knvJmSXQfpVB",
-                        modifier = Modifier.fillMaxWidth().padding(top = 20.dp)
+                        modifier = Modifier.fillMaxWidth().padding(top = 0.dp)
                     )
                 }
 
                 AutoScrollingServicesRow(
                     services = vehicleServices,
-                    serviceReadings = serviceReadings,
-                    modifier = Modifier.fillMaxWidth().padding(top = if (isVideoEnabled) 24.dp else 16.dp)
+                    serviceReadingsMap = serviceReadingsMap,
+                    modifier = Modifier.fillMaxWidth().padding(top = if (isVideoEnabled) 24.dp else 16.dp),
+                    onInteraction = onInteraction
                 )
             }
         }
@@ -556,7 +987,7 @@ fun InactivityOverlay(
             z = accelerometerReadings.third,
             isMonitoring = isMonitoring,
             onClick = {
-                Log.d("Dashboard", ">>> BUTTON CLICKED! isMonitoring=$isMonitoring <<<")
+                Log.d("Dashboard", ">>> START BUTTON CLICKED! isMonitoring=$isMonitoring <<<")
                 Log.d("Dashboard", ">>> Calling onToggleMonitoring()")
                 onToggleMonitoring()
                 Log.d("Dashboard", ">>> Calling onInteraction()")
@@ -572,7 +1003,8 @@ fun InactivityOverlay(
 fun AutoScrollingServicesRow(
     services: List<Service>,
     modifier: Modifier = Modifier,
-    serviceReadings: Int = 0
+    serviceReadingsMap: Map<String, Int> = emptyMap(),
+    onInteraction: () -> Unit = { /* No-op */ },
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -624,7 +1056,7 @@ fun AutoScrollingServicesRow(
             ) { _, service ->
                 ServiceCard(
                     service = service,
-                    reading = if (service.name == "No Services") 0 else serviceReadings
+                    reading = if (service.name == "No Services") 0 else (serviceReadingsMap[service.id] ?: 0)
                 )
             }
         }
@@ -658,7 +1090,7 @@ fun ServiceCard(service: Service, reading: Int, modifier: Modifier = Modifier) {
             // Show reading value with color based on limit
             Text(
                 text = "$reading",
-                color = if (reading >= service.mileageLimit.toInt() && service.mileageLimit > 0) {
+                color = if (reading >= service.mileageLimit && service.mileageLimit > 0f) {
                     Color.Red.copy(alpha = 0.9f)
                 } else {
                     Color.Cyan.copy(alpha = 0.9f)
@@ -669,7 +1101,7 @@ fun ServiceCard(service: Service, reading: Int, modifier: Modifier = Modifier) {
             // Show limit info
             if (service.mileageLimit > 0) {
                 Text(
-                    text = "/ ${service.mileageLimit.toInt()}",
+                    text = "/ ${service.mileageLimit}",
                     color = Color.White.copy(alpha = 0.5f),
                     fontSize = 10.sp
                 )
@@ -817,24 +1249,17 @@ fun VehicleCard(
 @Composable
 fun ServiceRowCard(
     service: Service,
-    currentReadings: Int,
+    totalMovement: Int,
     onClick: () -> Unit,
     isEnabled: Boolean = true,
     isMonitoringActive: Boolean = false,
+    isSelected: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val isClickable = isEnabled && !isMonitoringActive
     
-    // Persist readings per service - survives process death
-    // Only resets when admin/employee resets this specific service
-    var accumulatedReadings by rememberSaveable(service.id) { mutableStateOf(0) }
-    
-    // Update when new readings come in (accumulate on top, never decrease)
-    LaunchedEffect(currentReadings) {
-        if (currentReadings > accumulatedReadings) {
-            accumulatedReadings = currentReadings
-        }
-    }
+    // Use the totalMovement from VehicleServiceMapping
+    val displayReadings = totalMovement
     
     Card(
         modifier = modifier
@@ -848,6 +1273,7 @@ fun ServiceRowCard(
             ),
         colors = CardDefaults.cardColors(
             containerColor = when {
+                isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 isMonitoringActive -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 else -> MaterialTheme.colorScheme.surfaceVariant
             }
@@ -873,9 +1299,9 @@ fun ServiceRowCard(
                             MaterialTheme.colorScheme.onSurface
                         },
                     )
-                    if (isMonitoringActive) {
+                    if (isSelected) {
                         Text(
-                            text = " (ACTIVE)",
+                            text = " ✓",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -906,16 +1332,16 @@ fun ServiceRowCard(
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "$accumulatedReadings",
+                    text = "$displayReadings",
                     style = MaterialTheme.typography.headlineSmall,
                     color = when {
-                        accumulatedReadings >= service.mileageLimit.toInt() -> MaterialTheme.colorScheme.error
+                        displayReadings >= service.mileageLimit -> MaterialTheme.colorScheme.error
                         !isEnabled || isMonitoringActive -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                         else -> MaterialTheme.colorScheme.primary
                     },
                 )
                 Text(
-                    text = "/ ${service.mileageLimit.toInt()}",
+                    text = "/ ${service.mileageLimit}",
                     style = MaterialTheme.typography.bodySmall,
                     color = if (!isEnabled || isMonitoringActive) {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -1271,7 +1697,7 @@ private fun ServiceSelectionItem(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "Limit: ${service.mileageLimit.toInt()}",
+                text = "Limit: ${service.mileageLimit}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.secondary,
             )

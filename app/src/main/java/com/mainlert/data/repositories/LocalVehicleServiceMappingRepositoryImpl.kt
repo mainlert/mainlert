@@ -186,6 +186,22 @@ class LocalVehicleServiceMappingRepositoryImpl @Inject constructor(
         }
     }
     
+    override suspend fun saveMovementCheckpoint(
+        mappingId: String,
+        totalMovement: Float
+    ): Result<Unit> {
+        return try {
+            val timestamp = System.currentTimeMillis()
+            // Use checkpoint-specific DAO method (no immediate sync)
+            localDatabase.mappingDao().updateMovementCheckpoint(mappingId, totalMovement, timestamp)
+            
+            // Do NOT trigger immediate sync - let periodic sync handle it
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Result.Failure(e.message ?: "Failed to save movement checkpoint")
+        }
+    }
+    
     override suspend fun startMappingMonitoring(mappingId: String): Result<Unit> {
         return try {
             val timestamp = System.currentTimeMillis()

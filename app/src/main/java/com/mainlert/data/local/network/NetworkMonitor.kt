@@ -76,6 +76,7 @@ class NetworkMonitor @Inject constructor(
      * @param debounceMs Milliseconds to debounce network state changes
      * @return Flow that emits stable network state
      */
+    @Suppress("UNUSED_PARAMETER")
     fun observeStableNetworkState(debounceMs: Long = 2000L): Flow<Boolean> {
         return observeNetworkState()
             .distinctUntilChanged()

@@ -66,7 +66,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- WorkManager configuration -->
+        <!-- WorkManager configuration - auto-initialization enabled -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -74,8 +74,7 @@
             tools:node="merge">
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
+                android:value="androidx.startup" />
         </provider>
 
         <meta-data

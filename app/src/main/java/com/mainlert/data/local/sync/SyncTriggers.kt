@@ -4,13 +4,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.OnLifecycleEvent
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.mainlert.data.local.LocalDatabase
-import com.mainlert.data.local.entities.VehicleServiceMappingEntity
 import com.mainlert.data.local.network.NetworkMonitor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +28,7 @@ class SyncTriggers @Inject constructor(
     private val localDatabase: LocalDatabase,
     private val networkMonitor: NetworkMonitor,
     private val coroutineScope: CoroutineScope
-) : LifecycleObserver {
+) : DefaultLifecycleObserver {
     
     private var isRegistered = false
     
@@ -46,8 +43,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is created.
      * Sets up initial sync triggers.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun onCreate() {
+    override fun onCreate(owner: LifecycleOwner) {
         setupBroadcastReceivers()
         setupNetworkMonitoring()
     }
@@ -56,8 +52,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is started.
      * Triggers initial sync if needed.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    fun onStart() {
+    override fun onStart(owner: LifecycleOwner) {
         triggerInitialSync()
     }
     
@@ -65,8 +60,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is resumed.
      * Ensures sync is active.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onResume() {
+    override fun onResume(owner: LifecycleOwner) {
         ensureSyncActive()
     }
     
@@ -74,8 +68,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is paused.
      * Pauses non-critical sync operations.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
+    override fun onPause(owner: LifecycleOwner) {
         pauseNonCriticalSync()
     }
     
@@ -83,8 +76,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is stopped.
      * Stops sync operations.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    fun onStop() {
+    override fun onStop(owner: LifecycleOwner) {
         stopSyncOperations()
     }
     
@@ -92,8 +84,7 @@ class SyncTriggers @Inject constructor(
      * Called when the lifecycle owner is destroyed.
      * Cleans up resources.
      */
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun onDestroy() {
+    override fun onDestroy(owner: LifecycleOwner) {
         cleanup()
     }
     

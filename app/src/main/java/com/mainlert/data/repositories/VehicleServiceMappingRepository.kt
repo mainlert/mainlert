@@ -70,6 +70,15 @@ interface VehicleServiceMappingRepository {
     ): Result<Unit>
 
     /**
+     * Saves a movement checkpoint without triggering immediate sync.
+     * Used for periodic crash recovery state preservation.
+     */
+    suspend fun saveMovementCheckpoint(
+        mappingId: String,
+        totalMovement: Float,
+    ): Result<Unit>
+
+    /**
      * Starts monitoring for a specific mapping.
      */
     suspend fun startMappingMonitoring(mappingId: String): Result<Unit>

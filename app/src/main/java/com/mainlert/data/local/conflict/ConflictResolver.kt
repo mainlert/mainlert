@@ -4,6 +4,7 @@ import com.mainlert.data.local.entities.ServiceEntity
 import com.mainlert.data.local.entities.ServiceVariantEntity
 import com.mainlert.data.local.entities.VehicleEntity
 import com.mainlert.data.local.entities.VehicleServiceMappingEntity
+import com.mainlert.data.local.entities.toVehicleServiceMappingEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +88,7 @@ class ConflictResolver @Inject constructor() {
                     deviceData.copy(firebaseLastUpdated = System.currentTimeMillis())
                 } else {
                     // Edge case: newer timestamp but lower movement
-                    handleEdgeCase(deviceData, firebaseData, "Device newer but lower movement")
+                    handleEdgeCase(deviceData, firebaseData)
                 }
             }
             
@@ -98,7 +99,7 @@ class ConflictResolver @Inject constructor() {
                     firebaseData.copy(localLastUpdated = System.currentTimeMillis())
                 } else {
                     // Edge case: newer timestamp but lower movement
-                    handleEdgeCase(firebaseData, deviceData, "Firebase newer but lower movement")
+                    handleEdgeCase(firebaseData, deviceData)
                 }
             }
             
@@ -115,12 +116,12 @@ class ConflictResolver @Inject constructor() {
             
             // Case 4: Edge case - handle based on business logic
             else -> {
-                handleEdgeCase(deviceData, firebaseData, "Edge case - timestamp comparison failed")
+                handleEdgeCase(deviceData, firebaseData)
             }
         }
         
         // Update metrics
-        updateMetrics(startTime, resolvedData)
+        updateMetrics(startTime)
         
         return resolvedData
     }
@@ -135,8 +136,7 @@ class ConflictResolver @Inject constructor() {
      */
     private fun handleEdgeCase(
         primaryData: VehicleServiceMappingEntity,
-        secondaryData: VehicleServiceMappingEntity,
-        reason: String
+        secondaryData: VehicleServiceMappingEntity
     ): VehicleServiceMappingEntity {
         // Business logic for edge cases:
         // If timestamps are close but movement doesn't align, prefer higher movement
@@ -150,7 +150,7 @@ class ConflictResolver @Inject constructor() {
     /**
      * Update conflict resolution metrics.
      */
-    private fun updateMetrics(startTime: Long, resolvedData: VehicleServiceMappingEntity) {
+    private fun updateMetrics(startTime: Long) {
         val endTime = System.currentTimeMillis()
         val operationTime = endTime - startTime
         

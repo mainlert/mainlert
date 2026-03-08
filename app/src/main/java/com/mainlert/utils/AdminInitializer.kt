@@ -14,10 +14,6 @@ import kotlinx.coroutines.tasks.await
  * This ensures the admin user is created only once during app setup.
  */
 class AdminInitializer(private val context: Context) {
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-    private val usersCollection = firestore.collection("users")
-
     private val sharedPreferences: SharedPreferences by lazy {
         context.getSharedPreferences("admin_init_prefs", Context.MODE_PRIVATE)
     }
@@ -37,13 +33,18 @@ class AdminInitializer(private val context: Context) {
      */
     suspend fun initializeAdmin(): Boolean {
         return try {
+            // Initialize Firebase instances lazily (after FirebaseApp initialization)
+            val auth = FirebaseAuth.getInstance()
+            val firestore = FirebaseFirestore.getInstance()
+            val usersCollection = firestore.collection("users")
+
             // Check if admin has already been initialized
             if (isAdminInitialized()) {
                 return true
             }
 
             // Check if admin user already exists in Firebase
-            val existingUser = findAdminUser()
+            val existingUser = findAdminUser(auth, usersCollection)
             if (existingUser != null) {
                 // Admin already exists, mark as initialized
                 markAdminInitialized()
@@ -51,7 +52,7 @@ class AdminInitializer(private val context: Context) {
             }
 
             // Create admin user
-            val adminUser = createAdminUser()
+            val adminUser = createAdminUser(auth, usersCollection)
             if (adminUser != null) {
                 markAdminInitialized()
                 return true
@@ -84,7 +85,7 @@ class AdminInitializer(private val context: Context) {
     /**
      * Searches for existing admin user in Firestore.
      */
-    private suspend fun findAdminUser(): User? {
+    private suspend fun findAdminUser(auth: FirebaseAuth, usersCollection: com.google.firebase.firestore.CollectionReference): User? {
         return try {
             val querySnapshot =
                 usersCollection
@@ -147,7 +148,7 @@ class AdminInitializer(private val context: Context) {
     /**
      * Creates a new admin user with the predefined credentials.
      */
-    private suspend fun createAdminUser(): User? {
+    private suspend fun createAdminUser(auth: FirebaseAuth, usersCollection: com.google.firebase.firestore.CollectionReference): User? {
         return try {
             // Create user in Firebase Authentication
             val authResult = auth.createUserWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD).await()
@@ -172,7 +173,7 @@ class AdminInitializer(private val context: Context) {
         } catch (e: FirebaseAuthUserCollisionException) {
             // User already exists in Firebase Auth, try to find and update in Firestore
             android.util.Log.w("AdminInitializer", "Admin user already exists in Firebase Auth")
-            handleExistingUser()
+            handleExistingUser(auth, usersCollection)
         } catch (e: Exception) {
             android.util.Log.e("AdminInitializer", "Failed to create admin user: ${e.message}", e)
             null
@@ -182,7 +183,7 @@ class AdminInitializer(private val context: Context) {
     /**
      * Handles case where user exists in Firebase Auth but not in Firestore.
      */
-    private suspend fun handleExistingUser(): User? {
+    private suspend fun handleExistingUser(auth: FirebaseAuth, usersCollection: com.google.firebase.firestore.CollectionReference): User? {
         return try {
             // Sign in to get the user
             val authResult = auth.signInWithEmailAndPassword(ADMIN_EMAIL, ADMIN_PASSWORD).await()

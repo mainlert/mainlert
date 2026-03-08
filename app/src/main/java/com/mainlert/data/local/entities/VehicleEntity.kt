@@ -44,26 +44,6 @@ fun VehicleEntity.toDomain(): Vehicle {
 }
 
 /**
- * Extension function to convert Vehicle domain model to VehicleEntity
- */
-fun Vehicle.toVehicleEntity(): VehicleEntity {
-    return VehicleEntity(
-        id = id,
-        userId = userId,
-        employeeId = employeeId,
-        name = name,
-        model = model,
-        year = year,
-        plateNumber = plateNumber,
-        status = status.name,
-        createdAt = createdAt,
-        lifetimeMileage = lifetimeMileage,
-        lastSyncTime = 0L,
-        isSynced = false
-    )
-}
-
-/**
  * Extension function to convert VehicleEntity to Firebase map
  */
 fun VehicleEntity.toVehicleFirebaseMap(): Map<String, Any?> {

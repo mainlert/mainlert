@@ -100,6 +100,13 @@ class AuthRepositoryImpl : AuthRepository {
     }
 
     /**
+     * Gets the current user's ID synchronously.
+     */
+    override fun getCurrentUserId(): String? {
+        return currentUser?.userId
+    }
+
+    /**
      * Sends a password reset email to the specified email address.
      */
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> {

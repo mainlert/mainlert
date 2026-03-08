@@ -82,6 +82,13 @@ interface AuthRepository {
     fun getCurrentUserRole(): User.UserRole?
 
     /**
+     * Gets the current user's ID synchronously.
+     *
+     * @return User ID of the current user, or null if not authenticated
+     */
+    fun getCurrentUserId(): String?
+
+    /**
      * Sends a password reset email to the specified email address.
      *
      * @param email Email address to send reset link to

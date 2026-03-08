@@ -1,7 +1,7 @@
 package com.mainlert.data.local.sync
 
 import com.mainlert.data.local.entities.VehicleServiceMappingEntity
-import com.mainlert.data.utils.toVehicleServiceMappingEntity
+import com.mainlert.data.local.entities.toVehicleServiceMappingEntity
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
